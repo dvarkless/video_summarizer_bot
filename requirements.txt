@@ -1,0 +1,8 @@
+langchain[llms]
+aiogram
+pyyaml
+uuid
+pymongo[srv]
+llama-cpp-python
+openai
+scikit-learn
