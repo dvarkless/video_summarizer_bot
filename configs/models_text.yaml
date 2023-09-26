@@ -1,0 +1,30 @@
+chatgpt:
+  name: "gpt3.5-turbo"
+  template: None
+  provider: OpenAI
+  is_local: False
+  available_context: 4096
+  model_params:
+    model_name: "gpt3.5-turbo"
+    temperature: 0.2
+    max_tokens: 512
+
+synthia:
+  name: "Synthia_13B_instruct"
+  hf_path: ""
+  template: ""
+  provider: LlamaCpp
+  is_local: False
+  available_context: 4096
+  model_params:
+    model_path: ""
+    temperature: 0.2
+    top_p: 0.95
+    repeat_penalty: 1.15
+    top_k: 40
+
+    max_tokens: 256
+
+    n_gpu_layers: 43
+    n_batch: 128
+    n_ctx: 4096
