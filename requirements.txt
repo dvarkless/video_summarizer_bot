@@ -6,3 +6,5 @@ pymongo[srv]
 llama-cpp-python
 openai
 scikit-learn
+openai-whisper
+pytube
