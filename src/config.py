@@ -32,6 +32,9 @@ class Config:
     def __setitem__(self, key):
         raise TypeError('Config file is immutable')
 
+    def keys(self):
+        return self.data.keys()
+
     def items(self):
         for data_tup in self.data.items():
             yield data_tup
