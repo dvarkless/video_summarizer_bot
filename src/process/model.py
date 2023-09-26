@@ -103,13 +103,13 @@ class ConfigureModel:
         'LlamaCpp'
     ]
 
-    def __init__(self, model_type, model_name, config) -> None:
+    def __init__(self, model_name, config) -> None:
         self._model_type = model_type
         self._model_name = model_name
         self._config = config
 
     def _configure_model(self):
-        model_class_name = self._config[self._model_name]['class_name']
+        model_class_name = self._config[self._model_name]['provider']
         model_kwargs = self._config[self._model_name]['model_params']
         model_class = self.model_names[model_class_name]
         return model_class(**model_kwargs)
