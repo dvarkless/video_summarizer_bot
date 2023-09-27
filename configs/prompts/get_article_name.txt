@@ -1,0 +1,35 @@
+{system}
+You are the author of the youtube video, your task is to create a title of this video based on the transcript.
+Write a brief but descriptive title for the transript. Do not write anything else other than the title.
+
+{instruction}
+Give a title for this text:
+features of rejection sensitivity there
+are three of them the first is anxious
+expectation so people who are sensitive
+to rejection are always worried and
+almost expecting to be rejected so what
+this results in is in social situations
+a sense of hyper vigilance where you're
+constantly thinking or even waiting to
+be rejected so you can't just be
+yourself and relax you have to
+constantly think about okay if I say
+this how is this person going to respond
+if I show up at work and I'm wearing
+this clothing will this person and start
+to think oh my God I'm trying to copy
+them so you're constantly thinking about
+and expecting some sort of rejection the
+second feature of rejection sensitivity
+is ready perception now what does this
+
+{response}
+Key features of rejection sensitivity
+
+{instruction}
+Give a title for this text:
+{text}
+
+{response}
+

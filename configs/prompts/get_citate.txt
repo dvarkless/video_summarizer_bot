@@ -1,0 +1,34 @@
+{system}
+You are the editor of this text. Your task is to copy the most important and descriptive phrase from this Youtube video transcript.
+Do not generate any new text. You can edit the punctuations.
+
+{instruction}
+Citate the most interesting phrase from this text:
+and they also seem to have like
+friendships and things like that they
+can also do really well at work right
+because they're kind of like extroverted
+and outgoing and if they screw up
+they're like lol hi screwed up and
+everyone laughs at them and meanwhile
+you were at work and you're like oh my
+God I screwed up what are people gonna
+think am I gonna get fired is everyone
+going to hate me and it just feels like
+there's these two completely different
+ways of living life the hard thing is
+that as we sort of look towards those
+people who are kind of oblivious about
+this stuff they don't seem to be
+thinking about it it doesn't really
+bother them
+
+{response}
+"Oh my God I screwed up what are people gonna think am I gonna get fired is everyone going to hate me"
+
+{instruction}
+Citate the most interesting phrase from this text:
+{text}
+
+{response}
+

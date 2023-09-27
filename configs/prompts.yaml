@@ -1,0 +1,15 @@
+summary_full:
+  premap: "./configs/prompts/get_citate.txt"
+  map: "./configs/prompts/video_summary.txt"
+  postmap: "./configs/prompts/get_title.txt"
+  reduce: "./configs/prompts/get_article_name.txt"
+
+summary_no_citates:
+  premap: None
+  map: "./configs/prompts/video_summary.txt"
+  postmap: "./configs/prompts/get_title.txt"
+  reduce: "./configs/prompts/get_article_name.txt"
+
+single_summary:
+  map: "./configs/prompts/video_summary.txt"
+  reduce: "./configs/prompts/combine_summaries.txt"
