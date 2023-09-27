@@ -1,0 +1,42 @@
+chatgpt:
+  provider: OpenAIEmbeddings
+  available_context: 4096
+  is_local: False
+  model_params:
+    embedding_ctx_length: 4096
+
+synthia:
+  provider: LlamaCppEmbeddings
+  is_local: True
+  available_context: 4096
+  model_params:
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/Synthia_13B_instruct/llama.cpp/synthia-13b-v1.2.Q4_K_M.gguf"
+    n_ctx: 4096
+    f16_kv: True
+
+    n_gpu_layers: 0
+    n_batch: 256
+
+airoboros:
+  provider: LlamaCpp
+  is_local: True
+  available_context: 4096
+  model_params:
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/airoboros_13B_instruct/llama.cpp/airoboros-l2-13b-2.2.1.Q4_K_M.gguf"
+    f16_kv: True
+    n_ctx: 4096
+
+    n_gpu_layers: 0
+    n_batch: 256
+
+vicuna:
+  provider: LlamaCpp
+  is_local: True
+  available_context: 4096
+  model_params:
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/vicuna_13b_CoT/llama.cpp/Vicuna-13B-CoT.Q4_K_M.gguf"
+    f16_kv: True
+
+    n_gpu_layers: 0
+    n_batch: 256
+    n_ctx: 4096
