@@ -8,10 +8,10 @@ from typing import Tuple, Union
 import numpy as np
 import torch
 import whisper
-from pytube import YouTube
-
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
+from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
+from pytube import YouTube
 
 
 class WhisperInference:
@@ -65,21 +65,6 @@ class WhisperInference:
 
         return result
 
-    @staticmethod
-    def format_time(elapsed_time: float) -> str:
-        hours, rem = divmod(elapsed_time, 3600)
-        minutes, seconds = divmod(rem, 60)
-
-        time_str = ""
-        if hours:
-            time_str += f"{hours} hours "
-        if minutes:
-            time_str += f"{minutes} minutes "
-        seconds = round(seconds)
-        time_str += f"{seconds} seconds"
-
-        return time_str.strip()
-
     def __del__(self):
         del self.model
 
@@ -97,6 +82,7 @@ class ConfigureModel:
         'OpenAIEmbeddings': OpenAIEmbeddings,
         'LlamaCppEmbeddings': LlamaCppEmbeddings,
         'WhisperLocal': WhisperInference,
+        'SpacyEmbeddings': SpacyEmbeddings,
     }
 
     local_models = [
@@ -104,7 +90,6 @@ class ConfigureModel:
     ]
 
     def __init__(self, model_name, config) -> None:
-        self._model_type = model_type
         self._model_name = model_name
         self._config = config
 
@@ -117,6 +102,3 @@ class ConfigureModel:
     def get_model(self):
         self.model = self._configure_model()
         return self.model
-
-    def get_model_type(self):
-        return self._model_type
