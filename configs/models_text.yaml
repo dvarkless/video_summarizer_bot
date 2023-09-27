@@ -3,6 +3,9 @@ chatgpt:
   template: None
   provider: OpenAI
   is_local: False
+  instruction_template: ""
+  system_template: ""
+  response_template: ""
   available_context: 4096
   model_params:
     model_name: "gpt3.5-turbo"
@@ -12,19 +15,74 @@ chatgpt:
 synthia:
   name: "Synthia_13B_instruct"
   hf_path: ""
-  template: ""
+  instruction_template: "USER:"
+  system_template: "SYSTEM:"
+  response_template: "ASSISTANT:"
   provider: LlamaCpp
-  is_local: False
+  is_local: True
   available_context: 4096
   model_params:
-    model_path: ""
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/Synthia_13B_instruct/llama.cpp/synthia-13b-v1.2.Q4_K_M.gguf"
     temperature: 0.2
     top_p: 0.95
     repeat_penalty: 1.15
     top_k: 40
+    f16_kv: True
 
-    max_tokens: 256
+    max_tokens: 400
+
+    n_gpu_layers: 42
+    n_batch: 256
+    n_ctx: 3500
+
+    verbose: True
+
+airoboros:
+  name: "Synthia_13B_instruct"
+  hf_path: ""
+  instruction_template: "### Instruction:"
+  system_template: "### System:"
+  response_template: "### Response:"
+  provider: LlamaCpp
+  is_local: True
+  available_context: 4096
+  model_params:
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/airoboros_13B_instruct/llama.cpp/airoboros-l2-13b-2.2.1.Q4_K_M.gguf"
+    temperature: 0.2
+    top_p: 0.95
+    repeat_penalty: 1.15
+    top_k: 40
+    f16_kv: True
+
+    max_tokens: 400
 
     n_gpu_layers: 43
-    n_batch: 128
-    n_ctx: 4096
+    n_batch: 256
+    n_ctx: 3500
+
+    verbose: True
+
+vicuna:
+  name: "vicuna_13b_CoT"
+  hf_path: ""
+  instruction_template: "USER:"
+  system_template: "SYSTEM:"
+  response_template: "ASSISTANT:"
+  provider: LlamaCpp
+  is_local: True
+  available_context: 4096
+  model_params:
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/vicuna_13b_CoT/llama.cpp/Vicuna-13B-CoT.Q4_K_M.gguf"
+    temperature: 0.2
+    top_p: 0.95
+    repeat_penalty: 1.15
+    top_k: 40
+    f16_kv: True
+
+    max_tokens: 400
+
+    n_gpu_layers: 43
+    n_batch: 256
+    n_ctx: 3500
+
+    verbose: True
