@@ -12,54 +12,33 @@ from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
 from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
 from pytube import YouTube
+from whisper.tokenizer import LANGUAGES
 
 
 class WhisperInference:
-    def __init__(self, model_name, model_path, file_path, is_translate, audio_extention='.mp4'):
+    def __init__(self, model_name, model_dir, is_translate, beam_size=1):
         self.model_name = model_name
-        self.model_path = Path(model_path)
-        self.file_path = Path(file_path)
+        self.model_path = Path(model_dir)
         self.available_models = whisper.available_models()
         self.available_langs = sorted(
-            list(whisper.tokenizer.LANGUAGES.values()))
-        self.default_beam_size = 1
+            list(LANGUAGES.values()))
+        self.beam_size = beam_size
         self.is_translate = is_translate
         self.model = whisper.load_model(
-            name=self.model_name, download_root=self.model_path)
+            name=self.model_name, download_root=str(self.model_path))
         self.input_files = []
-
-    def get_title(self, link):
-        yt = YouTube(link)
-        return yt.title
-
-    def get_audio(self, link):
-        yt = YouTube(link)
-        return yt.streams.get_audio_only().download(
-            filename=str(self.file_path))
-
-    def transcribe_file(self, file: str | Path):
-        try:
-            audio = whisper.load_audio(str(file))
-            result = self.transcribe(audio=audio,
-                                     )
-            return result
-
-        finally:
-            self.remove_files([file])
-
-    def transcribe_youtube(self, youtubelink: str):
-        audio_file_path = self.get_audio(youtubelink)
-        self.transcribe_file(audio_file_path)
 
     def transcribe(self,
                    audio: Union[str, np.ndarray, torch.Tensor],
+                   language=None,
                    ):
         start_time = time.time()
 
         result = self.model.transcribe(audio=audio,
                                        verbose=False,
-                                       beam_size=self.default_beam_size,
+                                       beam_size=self.beam_size,
                                        task="translate" if self.is_translate else "transcribe",
+                                       language=language,
                                        )["text"]
         self.elapsed_time = time.time() - start_time
 
@@ -67,12 +46,6 @@ class WhisperInference:
 
     def __del__(self):
         del self.model
-
-    @staticmethod
-    def remove_files(files_list):
-        for file_path in files_list:
-            file_path = Path(file_path)
-            file_path.unlink(True)
 
 
 class ConfigureModel:
@@ -92,6 +65,12 @@ class ConfigureModel:
     def __init__(self, model_name, config) -> None:
         self._model_name = model_name
         self._config = config
+
+    def __enter__(self):
+        return self.get_model()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        del self.model
 
     def _configure_model(self):
         model_class_name = self._config[self._model_name]['provider']
