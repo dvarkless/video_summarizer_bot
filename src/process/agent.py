@@ -48,32 +48,29 @@ class MapReduceSplitter:
                                            chunk_overlap=window_overlap
                                            )
 
-        self._llm = self._llm_provider.get_model()
-        self._embeddings = None
-
     @property
     def llm(self):
-        if hasattr(self, '_embeddings'):
-            del self._embeddings
         if not hasattr(self, '_llm'):
-            self._llm = self._llm_provider.get_model()
+            raise AttributeError("self.llm does not exist")
         return self._llm
 
     @property
     def embeddings(self):
-        if hasattr(self, '_llm'):
-            del self._llm
         if not hasattr(self, '_embeddings'):
-            self._embeddings = self._embeddings_provider.get_model()
+            raise AttributeError("self.embeddings does not exist")
         return self._embeddings
 
     @llm.setter
-    def llm(self, _):
-        pass
+    def llm(self, val):
+        if hasattr(self, '_embeddings'):
+            raise AttributeError("self.llm accessed without deleting self.embeddings")
+        self._llm = val
 
     @embeddings.setter
-    def embeddings(self, _):
-        pass
+    def embeddings(self, val):
+        if hasattr(self, '_llm'):
+            raise AttributeError("self.embeddings accessed without deleting self.llm")
+        self._embeddings = val
 
     def load_docs(self, doc_path):
         doc_path = Path(doc_path)
@@ -87,15 +84,16 @@ class MapReduceSplitter:
         if (doc_len <= self.n_docs_theshold):
             return documents
 
-        vectors = self.embeddings.embed_documents(
-            [x.page_content for x in documents])
+        with self._embeddings_provider as self.embeddings:
+            vectors = self.embeddings.embed_documents(
+                [x.page_content for x in documents])
 
-        # As the text grows larger, the compressed text becomes smaller
-        mul_coeff = (doc_len /
-                     self.n_docs_theshold) ** self.compression_power
-        num_clusters = int(doc_len*mul_coeff)
-        selected_ids = self._closest_docs(vectors, num_clusters)
-        selected_docs = [documents[doc_id] for doc_id in selected_ids]
+            # As the text grows larger, the compressed text becomes smaller
+            mul_coeff = (doc_len /
+                         self.n_docs_theshold) ** self.compression_power
+            num_clusters = int(doc_len*mul_coeff)
+            selected_ids = self._closest_docs(vectors, num_clusters)
+            selected_docs = [documents[doc_id] for doc_id in selected_ids]
         return selected_docs
 
     def _closest_docs(self, vectors, num_clusters):
@@ -154,58 +152,25 @@ class MapReduceSplitter:
 
         documents = self.load_docs(doc_path)
         documents = self.compress_docs(documents)
-        if self.premap_prompts:
-            out_dict |= self.iterate_chains(documents, self.premap_prompts)
+        with self._llm_provider as self.llm:
+            if self.premap_prompts:
+                out_dict |= self.iterate_chains(documents, self.premap_prompts)
 
-        map_reduce_chain = self.get_main_chain()
-        mr_input = {'docs': [Document(page_content=doc) for doc in documents]}
-        out_dict = map_reduce_chain(mr_input)
-        chapter_outs = out_dict['intermediate_steps']
-        brief_description = out_dict['output_text']
+            map_reduce_chain = self.get_main_chain()
+            mr_input = {'docs': [Document(page_content=doc) for doc in documents]}
+            out_dict = map_reduce_chain(mr_input)
+            chapter_outs = out_dict['intermediate_steps']
+            brief_description = out_dict['output_text']
 
-        if self.postmap_prompts:
-            out_dict |= self.iterate_chains(chapter_outs, self.postmap_prompts)
+            if self.postmap_prompts:
+                out_dict |= self.iterate_chains(chapter_outs, self.postmap_prompts)
 
-        if self.postreduce_prompts:
-            out_dict |= self.iterate_chains(
-                brief_description, self.postreduce_prompts)
+            if self.postreduce_prompts:
+                out_dict |= self.iterate_chains(
+                    brief_description, self.postreduce_prompts)
 
-        out_dict['chapters'] = chapter_outs
-        out_dict['description'] = brief_description
-        out_dict['title'] = doc_name or '{name}'
+            out_dict['chapters'] = chapter_outs
+            out_dict['description'] = brief_description
+            out_dict['title'] = doc_name or '{name}'
         return out_dict
 
-
-class Captions:
-    def __init__(self) -> None:
-        pass
-
-    def load_audio(self, audio_path):
-        self.audio = Path(audio_path)
-
-    def run(self):
-        pass
-
-    def save_text(self):
-        pass
-
-    def get_text(self):
-        pass
-
-
-class Video:
-    def __init__(self) -> None:
-        pass
-
-    def from_youtube(self, url):
-        pass
-
-    def from_file(self, path):
-        pass
-
-    def is_path(self, string):
-        string = Path(string)
-        if string.exists():
-            return True
-        else:
-            return False
