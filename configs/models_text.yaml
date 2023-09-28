@@ -14,7 +14,7 @@ chatgpt:
 
 synthia:
   name: "Synthia_13B_instruct"
-  hf_path: ""
+  hf_repo: ""
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"
@@ -39,7 +39,7 @@ synthia:
 
 airoboros:
   name: "Synthia_13B_instruct"
-  hf_path: ""
+  hf_repo: ""
   instruction_template: "### Instruction:"
   system_template: "### System:"
   response_template: "### Response:"
@@ -64,7 +64,7 @@ airoboros:
 
 vicuna:
   name: "vicuna_13b_CoT"
-  hf_path: ""
+  hf_repo: ""
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"

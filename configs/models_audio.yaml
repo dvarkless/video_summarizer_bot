@@ -1,7 +1,8 @@
 whisper_local:
-  provider: WhisperInference
+  provider: WhisperLocal
   model_params:
     model_name: "medium"
-    model_path: "./models/whisper/"
-    file_path: "./temp/"
+    model_dir: "./models/whisper/"
     is_translate: False
+    device: "cuda"
+
