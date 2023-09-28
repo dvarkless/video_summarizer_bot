@@ -16,6 +16,9 @@ class MapReduceSplitter:
         '\n\n',
         '\n',
         '\t',
+        '. ',
+        '? ',
+        '! ',
     ]
 
     def __init__(self,
@@ -63,13 +66,15 @@ class MapReduceSplitter:
     @llm.setter
     def llm(self, val):
         if hasattr(self, '_embeddings'):
-            raise AttributeError("self.llm accessed without deleting self.embeddings")
+            raise AttributeError(
+                "self.llm accessed without deleting self.embeddings")
         self._llm = val
 
     @embeddings.setter
     def embeddings(self, val):
         if hasattr(self, '_llm'):
-            raise AttributeError("self.embeddings accessed without deleting self.llm")
+            raise AttributeError(
+                "self.embeddings accessed without deleting self.llm")
         self._embeddings = val
 
     def load_docs(self, doc_path):
@@ -137,15 +142,33 @@ class MapReduceSplitter:
         )
         return map_reduce_chain
 
-    def iterate_chains(self, text, prompts):
+    def iterate_chains(self, docs, prompts):
         out = {}
         for name, prompt in prompts.items():
+            out[name] = []
             premap_chain = LLMChain(
                 llm=self.llm,
                 prompt=prompt
             )
-            out[name] = premap_chain.run(text)
+            for doc in docs:
+                out[name].append(premap_chain.run(doc))
         return out
+
+    # It could be used on reduce output, but it could also be a chapter
+    def fix_titles(self, titles: list[str]):
+        fixed_titles = []
+        for title in titles:
+            title = title.split(':\n')[-1]
+            title = title.strip("\'\"")
+            fixed_titles.append(title)
+        return fixed_titles
+
+    def fix_chapters(self, chapters: list[str]):
+        fixed_chapters = []
+        for chapter in chapters:
+            chapter = chapter.split(':\n')[-1]
+            fixed_chapters.append(chapter)
+        return fixed_chapters
 
     def run(self, doc_path, doc_name=None):
         out_dict = {}
@@ -157,20 +180,21 @@ class MapReduceSplitter:
                 out_dict |= self.iterate_chains(documents, self.premap_prompts)
 
             map_reduce_chain = self.get_main_chain()
-            mr_input = {'docs': [Document(page_content=doc) for doc in documents]}
-            out_dict = map_reduce_chain(mr_input)
-            chapter_outs = out_dict['intermediate_steps']
-            brief_description = out_dict['output_text']
+            mr_input = {'docs': [Document(page_content=doc)
+                                 for doc in documents]}
+            map_reduce_dict = map_reduce_chain(mr_input)
+            chapter_outs = map_reduce_dict['intermediate_steps']
+            brief_description = map_reduce_dict['output_text']
 
             if self.postmap_prompts:
-                out_dict |= self.iterate_chains(chapter_outs, self.postmap_prompts)
+                out_dict |= self.iterate_chains(
+                    chapter_outs, self.postmap_prompts)
 
             if self.postreduce_prompts:
                 out_dict |= self.iterate_chains(
                     brief_description, self.postreduce_prompts)
 
-            out_dict['chapters'] = chapter_outs
-            out_dict['description'] = brief_description
+            out_dict['chapters'] = self.fix_chapters(chapter_outs)
+            out_dict['description'] = self.fix_chapters(brief_description)
             out_dict['title'] = doc_name or '{name}'
         return out_dict
-
