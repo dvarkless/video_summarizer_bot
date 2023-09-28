@@ -1,6 +1,3 @@
-# Model
-# Embedding Support
-import re
 import time
 from pathlib import Path
 from typing import Tuple, Union
@@ -11,12 +8,18 @@ import whisper
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
 from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
-from pytube import YouTube
 from whisper.tokenizer import LANGUAGES
 
 
 class WhisperInference:
-    def __init__(self, model_name, model_dir, is_translate, beam_size=1):
+    def __init__(
+            self,
+            model_name,
+            model_dir,
+            is_translate,
+            beam_size=1,
+            **whisper_params
+    ):
         self.model_name = model_name
         self.model_path = Path(model_dir)
         self.available_models = whisper.available_models()
@@ -25,20 +28,21 @@ class WhisperInference:
         self.beam_size = beam_size
         self.is_translate = is_translate
         self.model = whisper.load_model(
-            name=self.model_name, download_root=str(self.model_path))
+            name=self.model_name, download_root=str(self.model_path), **whisper_params)
         self.input_files = []
 
     def transcribe(self,
                    audio: Union[str, np.ndarray, torch.Tensor],
                    language=None,
+                   **to_whisper_transcribe,
                    ):
         start_time = time.time()
 
         result = self.model.transcribe(audio=audio,
-                                       verbose=False,
                                        beam_size=self.beam_size,
                                        task="translate" if self.is_translate else "transcribe",
                                        language=language,
+                                       **to_whisper_transcribe,
                                        )["text"]
         self.elapsed_time = time.time() - start_time
 
