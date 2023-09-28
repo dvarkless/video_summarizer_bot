@@ -10,30 +10,31 @@ logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
 
 
-class Config:
-    project_name = "telegram_video_summarizer"
+def fix_relative_path(rel_path):
+    PROJECT_NAME = "telegram_video_summarizer"
 
+    curr_root = rel_path.resolve().parent
+    while curr_root is not None:
+        if curr_root.name == PROJECT_NAME:
+            break
+        if curr_root == curr_root.root:
+            curr_root = None
+        else:
+            curr_root = curr_root.parent
+    if curr_root is not None:
+        return curr_root / rel_path
+    else:
+        raise FileNotFoundError(f"Could not find file '{rel_path}'")
+
+
+class Config:
     def __init__(self, conf_path) -> None:
         self.path = Path(conf_path)
         if not self.path.exists():
-            self.path = self.fix_relative_path(self.path)
+            self.path = fix_relative_path(self.path)
         self.data = dict()
 
         self._load_all()
-
-    def fix_relative_path(self, rel_path):
-        curr_root = rel_path.resolve().parent
-        while curr_root is not None:
-            if curr_root.name == self.project_name:
-                break
-            if curr_root == curr_root.root:
-                curr_root = None
-            else:
-                curr_root = curr_root.parent
-        if curr_root is not None:
-            return curr_root / rel_path
-        else:
-            raise FileNotFoundError(f"Could not find config file '{self.path}'")
 
     def _load_all(self):
         with open(self.path, 'r') as f:
