@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pytube import YouTube
+from pytubefix import YouTube
 from whisper import load_audio
 
 
@@ -9,20 +9,31 @@ class Transcribe:
         self._model_provider = model_provider
         self.temp_dir = Path(temp_dir)
 
-    def transcribe_file(self, file: str | Path, language=None):
+    def transcribe_file(
+            self,
+            file: str | Path,
+            language=None,
+            **to_whisper_transcribe
+    ) -> str:
         try:
             with self._model_provider as model:
                 audio = load_audio(str(file))
                 result = model.transcribe(
                     audio=audio,
                     language=language,
+                    **to_whisper_transcribe,
                 )
             return result
 
         finally:
             self.remove_files([file])
 
-    def transcribe_multiple(self, file_list: list[str | Path], language=None):
+    def transcribe_multiple(
+            self,
+            file_list: list[str | Path],
+            language=None,
+            **to_whisper_transcribe
+    ) -> list[str]:
         results = []
         try:
             with self._model_provider as model:
@@ -31,8 +42,10 @@ class Transcribe:
                     result = model.transcribe(
                         audio=audio,
                         language=language,
+                        **to_whisper_transcribe,
                     )
                     results.append(result)
+            return results
 
         finally:
             self.remove_files(file_list)
@@ -53,17 +66,31 @@ class Transcribe:
 
 class TranscribeYoutube(Transcribe):
     def __init__(self, model_provider, temp_dir) -> None:
+        self.yt = None
         super().__init__(model_provider, temp_dir)
 
-    def transcribe_youtube(self, youtubelink: str, language=None):
-        audio_file_path = self.get_audio(youtubelink)
-        self.transcribe_file(audio_file_path, language=language)
+    def load_link(self, youtubelink: str):
+        self.yt = YouTube(youtubelink)
 
-    def get_title(self, link):
-        yt = YouTube(link)
-        return yt.title
+    def transcribe_youtube(
+            self,
+            language=None,
+            **to_whisper_transcribe
+    ) -> str:
+        audio_file_path = self.get_audio()
+        result = self.transcribe_file(
+            file=audio_file_path, language=language, **to_whisper_transcribe)
+        return result
 
-    def get_audio(self, link):
-        yt = YouTube(link)
-        return yt.streams.get_audio_only().download(
-            filename=str(self.temp_dir))
+    def get_title(self):
+        if self.yt is not None:
+            return self.yt.title
+        else:
+            raise AttributeError("Call self.load_link first")
+
+    def get_audio(self):
+        if self.yt is not None:
+            return self.yt.streams.get_audio_only().download(
+                filename=str(self.temp_dir))
+        else:
+            raise AttributeError("Call self.load_link first")
