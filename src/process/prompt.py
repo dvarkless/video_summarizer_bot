@@ -1,8 +1,9 @@
 import string
-from functools import partial
 from pathlib import Path
 
 from langchain.prompts import PromptTemplate
+
+from src.config import fix_relative_path
 
 
 class StringTemplate(object):
@@ -27,7 +28,9 @@ class StringTemplate(object):
 def get_prompt(file_name, constant_dict=None):
     if file_name is None:
         return None
-    assert Path(file_name).exists()
+    file_name = Path(file_name)
+    if not file_name.exists():
+        file_name = fix_relative_path(file_name)
     with open(file_name, 'r') as f:
         text = f.read()
 
