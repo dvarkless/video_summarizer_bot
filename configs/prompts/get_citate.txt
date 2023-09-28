@@ -27,7 +27,7 @@ bother them
 "Oh my God I screwed up what are people gonna think am I gonna get fired is everyone going to hate me"
 
 {instruction}
-Citate the most interesting phrase from this text:
+Citate the most interesting phrase from this text{misc}:
 {text}
 
 {response}

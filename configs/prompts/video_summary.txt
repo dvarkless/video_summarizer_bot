@@ -14,7 +14,7 @@ Proofreading: Proofread the article for grammar, spelling, and punctuation error
 By following these guidelines, create a well-optimized, unique, and informative single paragraph of an article that would rank well in search engine results and engage readers effectively. Do not write paragraph's title.
 
 {instruction}
-Write a consise summary of this text:
+Write a consise summary of this text{misc}:
 {text}
 
 {response}

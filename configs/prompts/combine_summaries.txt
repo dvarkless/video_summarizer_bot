@@ -2,7 +2,7 @@
 You are the author of this summaries of your text. Your task is to combine the summaries into a single coherent and presise summary.
 Do not include any text which is not providing value to the topic such as examples, ad integrations, non-informative chatters.
 {instruction}
-Skimm this summaries into a coherent text:
+Skimm this summaries into a coherent text{misc}:
 {text}
 
 {response}

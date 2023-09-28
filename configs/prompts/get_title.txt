@@ -28,7 +28,7 @@ is ready perception now what does this
 Key features of rejection sensitivity
 
 {instruction}
-Write a title for this text:
+Write a title for this text{misc}:
 {text}
 
 {response}
