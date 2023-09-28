@@ -11,12 +11,29 @@ logger.addHandler(get_handler())
 
 
 class Config:
+    project_name = "telegram_video_summarizer"
+
     def __init__(self, conf_path) -> None:
         self.path = Path(conf_path)
-        assert self.path.exists()
+        if not self.path.exists():
+            self.path = self.fix_relative_path(self.path)
         self.data = dict()
 
         self._load_all()
+
+    def fix_relative_path(self, rel_path):
+        curr_root = rel_path.resolve().parent
+        while curr_root is not None:
+            if curr_root.name == self.project_name:
+                break
+            if curr_root == curr_root.root:
+                curr_root = None
+            else:
+                curr_root = curr_root.parent
+        if curr_root is not None:
+            return curr_root / rel_path
+        else:
+            raise FileNotFoundError(f"Could not find config file '{self.path}'")
 
     def _load_all(self):
         with open(self.path, 'r') as f:
