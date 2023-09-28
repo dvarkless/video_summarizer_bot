@@ -12,6 +12,10 @@ logger.addHandler(get_handler())
 
 def fix_relative_path(rel_path):
     PROJECT_NAME = "telegram_video_summarizer"
+    if Path().cwd().name == PROJECT_NAME:
+        return rel_path.resolve()
+    if str(rel_path) == str(rel_path.absolute()):
+        return rel_path
 
     curr_root = rel_path.resolve().parent
     while curr_root is not None:
@@ -43,6 +47,14 @@ class Config:
             raise FileNotFoundError(f'The requested config file \
                                     "{self.path}" is empty')
         self.data = items.copy()
+        self._fix_paths(self.data)
+
+    def _fix_paths(self, data_dict):
+        for key, val in data_dict.items():
+            if 'path' in key:
+                data_dict[key] = str(fix_relative_path(Path(val)))
+            if isinstance(val, dict):
+                self._fix_paths(data_dict[key])
 
     def __getitem__(self, key):
         return self.data[key]
