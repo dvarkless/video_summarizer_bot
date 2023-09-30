@@ -1,13 +1,13 @@
 from pathlib import Path
 
 from pytubefix import YouTube
-from whisper import load_audio
 
 
 class Transcribe:
     def __init__(self, model_provider, temp_dir) -> None:
         self._model_provider = model_provider
         self.temp_dir = Path(temp_dir)
+        self.elapsed_time = 0.0
 
     def transcribe_file(
             self,
@@ -15,14 +15,15 @@ class Transcribe:
             language=None,
             **to_whisper_transcribe
     ) -> str:
+        self.elapsed_time = 0.0
         try:
             with self._model_provider as model:
-                audio = load_audio(str(file))
                 result = model.transcribe(
-                    audio=audio,
+                    audio=file,
                     language=language,
                     **to_whisper_transcribe,
                 )
+                self.elapsed_time = model.elapsed_time
             return result
 
         finally:
@@ -34,17 +35,18 @@ class Transcribe:
             language=None,
             **to_whisper_transcribe
     ) -> list[str]:
+        self.elapsed_time = 0.0
         results = []
         try:
             with self._model_provider as model:
                 for file_path in file_list:
-                    audio = load_audio(str(file_path))
                     result = model.transcribe(
-                        audio=audio,
+                        audio=file_path,
                         language=language,
                         **to_whisper_transcribe,
                     )
                     results.append(result)
+                    self.elapsed_time += model.elapsed_time
             return results
 
         finally:
