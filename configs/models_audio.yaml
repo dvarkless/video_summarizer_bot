@@ -1,7 +1,7 @@
 whisper_local:
   provider: WhisperLocal
   model_params:
-    model_name: "medium"
+    model_name: "large-v2"
     model_dir: "./models/whisper/"
     is_translate: False
     device: "cuda"

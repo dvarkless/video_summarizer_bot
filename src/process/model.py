@@ -3,12 +3,10 @@ from pathlib import Path
 from typing import Tuple, Union
 
 import numpy as np
-import torch
-import whisper
+from faster_whisper import WhisperModel
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
 from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
-from whisper.tokenizer import LANGUAGES
 
 
 class WhisperInference:
@@ -17,22 +15,20 @@ class WhisperInference:
             model_name,
             model_dir,
             is_translate,
-            beam_size=1,
+            beam_size=5,
             **whisper_params
     ):
         self.model_name = model_name
         self.model_path = Path(model_dir)
-        self.available_models = whisper.available_models()
-        self.available_langs = sorted(
-            list(LANGUAGES.values()))
         self.beam_size = beam_size
         self.is_translate = is_translate
-        self.model = whisper.load_model(
-            name=self.model_name, download_root=str(self.model_path), **whisper_params)
+        self.model = WhisperModel(
+            model_name, compute_type='float16', download_root=model_dir)
         self.input_files = []
+        self.elapsed_time = 0
 
     def transcribe(self,
-                   audio: Union[str, np.ndarray, torch.Tensor],
+                   audio: Union[str, np.ndarray],
                    language=None,
                    **to_whisper_transcribe,
                    ):
@@ -42,8 +38,11 @@ class WhisperInference:
                                        beam_size=self.beam_size,
                                        task="translate" if self.is_translate else "transcribe",
                                        language=language,
+                                       without_timestamps=True,
                                        **to_whisper_transcribe,
-                                       )["text"]
+                                       )[0]
+        res_texts = (r.text for r in result)
+        result = '\n'.join(res_texts)
         self.elapsed_time = time.time() - start_time
 
         return result
