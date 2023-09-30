@@ -1,10 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch
 langchain[llms]
 aiogram
 pyyaml
 uuid
 pymongo[srv]
 llama-cpp-python
-openai
 scikit-learn
-openai-whisper
 pytubefix
+faster-whisper
