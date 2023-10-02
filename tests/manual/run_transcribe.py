@@ -19,9 +19,10 @@ model_name = "whisper_local"
 my_config = models_config[model_name]
 model_provider = ConfigureModel(model_name, models_config)
 
-transcriber = TranscribeYoutube(model_provider, "./temp/")
-transcriber.load_link("https://www.youtube.com/watch?v=suv6DtRLnMw")
-text = transcriber.transcribe_youtube(verbose=True)
+transcriber = TranscribeYoutube(model_provider, "./temp/temp.mp4")
+transcriber.load_link("https://www.youtube.com/watch?v=ACI7xDjajPg")
+text = transcriber.transcribe_youtube()
 print(text)
+print(f"Transcribtion finished in {transcriber.elapsed_time:.2f}s")
 
 
