@@ -2,33 +2,34 @@ from pathlib import Path
 
 
 class Document:
-    def __init__(self, path) -> None:
-        self.path = Path(path)
-        self.title = None
+    def __init__(self, file_dir, file_name) -> None:
+        self.file_dir = Path(file_dir)
+        self.file_name = file_name
+        self.text = ""
 
-    def compose_plain(self, in_text):
-        raise NotImplementedError
+    def plain(self, in_text: str):
+        raise NotImplementedError("Not implemented")
 
     def write_file(self):
-        raise NotImplementedError
+        raise NotImplementedError("Not implemented")
 
-    def compose_header(self, title: str, description: str):
-        raise NotImplementedError
+    def h1(self, title: str):
+        raise NotImplementedError("Not implemented")
 
-    def compose_header_html(self, title: str, description: str):
-        raise NotImplementedError
+    def h2(self, title: str):
+        raise NotImplementedError("Not implemented")
 
-    def compose_index(self, chapters: list[str]):
-        raise NotImplementedError
+    def h3(self, title: str):
+        raise NotImplementedError("Not implemented")
 
-    def compose_citate(self, citate: str):
-        raise NotImplementedError
+    def index(self, chapters: list[str]):
+        raise NotImplementedError("Not implemented")
+
+    def citate(self, citate: str):
+        raise NotImplementedError("Not implemented")
 
     def sep(self):
-        raise NotImplementedError
+        raise NotImplementedError("Not implemented")
 
-    def compose_embedding(self, link: str):
-        raise NotImplementedError
-
-    def compose_footer(self, in_text: str, link: str):
-        raise NotImplementedError
+    def embedding(self, link: str):
+        raise NotImplementedError("Not implemented")
