@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import os
 
 import yaml
 
@@ -34,6 +35,9 @@ def fix_relative_path(rel_path):
 class Config:
     def __init__(self, conf_path) -> None:
         self.path = Path(conf_path)
+        conf_root = os.getenv("TELEGRAM_SUMMARY_BOT_CONFIG_ROOT")
+        if conf_root is not None:
+            self.path = Path(conf_root) / Path(conf_path)
         if not self.path.exists():
             self.path = fix_relative_path(self.path)
         self.data = dict()
