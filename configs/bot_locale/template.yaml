@@ -1,1 +1,38 @@
- 
+welcome: |
+  welcome
+
+help: |
+  help message
+  sample text
+
+change_language: 
+  message: |
+    change bots language
+  button1: "en"
+  button2: "rus"
+
+document_format:
+  message: |
+    Change document output format
+  button1: "pdf"
+  button2: "markdown"
+
+document_language:
+  message: |
+    Receive answer in
+  button1: "auto"
+  button2: "English"
+  button3: "русский"
+
+text_format:
+  message: |
+    Text structure
+  button1: "full"
+  button2: "short"
+
+general:
+  success: Success!
+
+errors:
+  critical: "Critical Error"
+  link_error: "Bad link"
