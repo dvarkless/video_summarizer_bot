@@ -3,6 +3,8 @@ chatgpt:
   template: None
   provider: OpenAI
   is_local: False
+  window_len: 5000
+  window_overlap: 400
   instruction_template: ""
   system_template: ""
   response_template: ""
@@ -15,6 +17,8 @@ chatgpt:
 synthia:
   name: "Synthia_13B_instruct"
   hf_repo: ""
+  window_len: 5000
+  window_overlap: 400
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"
@@ -40,6 +44,8 @@ synthia:
 airoboros:
   name: "Synthia_13B_instruct"
   hf_repo: ""
+  window_len: 5000
+  window_overlap: 400
   instruction_template: "### Instruction:"
   system_template: "### System:"
   response_template: "### Response:"
@@ -65,6 +71,8 @@ airoboros:
 vicuna:
   name: "vicuna_13b_CoT"
   hf_repo: ""
+  window_len: 5000
+  window_overlap: 400
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"
