@@ -1,5 +1,6 @@
 import string
 from pathlib import Path
+from typing import List
 
 from langchain.prompts import PromptTemplate
 
@@ -25,17 +26,28 @@ class StringTemplate(object):
         return self.__repr__()
 
 
-def get_prompt(file_name, constant_dict=None):
+def get_prompt(file_name: str | List, constant_dict=None) -> None | str | List:
     if file_name is None:
         return None
-    file_name = Path(file_name)
-    if not file_name.exists():
-        file_name = fix_relative_path(file_name)
-    with open(file_name, 'r') as f:
-        text = f.read()
+    to_return = []
 
-    if constant_dict is not None:
-        text = StringTemplate(text)
-        text = text.format(**constant_dict)
+    if isinstance(file_name, str):
+        file_name = (file_name)
 
-    return PromptTemplate.from_template(text)
+    for single_file in file_name:
+        single_file = Path(single_file)
+        if not single_file.exists():
+            single_file = fix_relative_path(single_file)
+        with open(single_file, 'r') as f:
+            text = f.read()
+
+        if constant_dict is not None:
+            text = StringTemplate(text)
+            text = text.format(**constant_dict)
+
+        to_return.append(PromptTemplate.from_template(text))
+
+    if len(to_return) == 1:
+        return to_return[0]
+    else:
+        return to_return
