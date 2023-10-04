@@ -4,7 +4,8 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 
-from src.bot.routers import router
+import src.bot.settings as settings_router
+import src.bot.action_handlers as action_router
 
 from src.config import Config
 
@@ -20,7 +21,7 @@ async def main() -> None:
     logger = logging.getLogger(__name__)
     logger.addHandler(get_handler())
 
-    dp.include_routers(router)
+    dp.include_routers(settings_router.router, action_router.router)
     await bot.delete_webhook(drop_pending_updates=True)
     print("bot activated")
     await dp.start_polling(bot)
