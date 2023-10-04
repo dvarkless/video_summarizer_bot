@@ -13,12 +13,14 @@ class Markdown(Document):
         self.text = ""
         self.indexname = 'Index'
         self.h2_id = 1
+        self.suffix = '.md'
+        self.path = self.file_dir / f"{self.file_name}{self.suffix}"
 
     def plain(self, in_text):
         self.text += f"{in_text}  \n"
 
     def write_file(self):
-        with open(self.file_dir / f"{self.file_name}.md", 'w') as f:
+        with open(self.path, 'w') as f:
             f.write(self.text)
 
     def h1(self, title):
