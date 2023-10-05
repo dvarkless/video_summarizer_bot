@@ -38,6 +38,7 @@ class BotReply(metaclass=Singleton):
         self.user_lang = dict()
 
     def _get_user_lang(self, user_id):
+        # DB access
         pass
 
     def _get_position(self, user_id, scope, message=None):
@@ -61,6 +62,6 @@ class BotReply(metaclass=Singleton):
             replica.pop('message')
             answers = replica[scope].values()
             for answer in answers:
-                to_return.append(answer.casefold())
+                to_return.append(answer)
         return to_return
 
