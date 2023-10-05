@@ -32,6 +32,7 @@ text_format:
 
 general:
   success: Success!
+  document_caption: Here is your summary!
 
 errors:
   critical: "Critical Error"
