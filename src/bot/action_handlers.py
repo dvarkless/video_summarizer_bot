@@ -2,12 +2,12 @@ import re
 import time
 
 from aiogram import Bot, F, Router
-from aiogram.filters import Command
-from aiogram.types import FSInputFile, Message, ReplyKeyboardRemove
+from aiogram.filters.exception import ExceptionTypeFilter
+from aiogram.types import ErrorEvent
+from aiogram.types import FSInputFile, Message
 
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
-from src.bot.keyboard import keyboard
 from src.config import Config
 from src.database import Database
 
@@ -39,9 +39,10 @@ async def video_handler(message: Message, bot: Bot) -> None:
 
 
 @router.message(F.text)
-async def link_handler(message: Message, bot: Bot) -> None:
+async def link_handler(message: Message) -> None:
     user_id = message.from_user.id
     get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
+    # IndexError if link is invalid
     link = get_link_regex.findall(message.text)[0]
 
     summary_path = bot_run_summary(user_id, yt_link=link)
@@ -54,7 +55,7 @@ async def link_handler(message: Message, bot: Bot) -> None:
     )
 
 
-def bot_run_summary(user_id, video_path=None, yt_link=None, title=None):
+def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
     if video_path is not None:
         run_mode = 'video'
     if video_path is not None:
@@ -74,7 +75,7 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title=None):
     else:
         raise ValueError('Video path and yt link are not provided')
 
-    txt_path = f'./temp/{get_temp_name()}.txt'
+    txt_path = f'./temp/{get_temp_name("txt")}.txt'
     with open(txt_path, 'w') as f:
         f.writelines(text)
 
@@ -84,9 +85,11 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title=None):
     document_language = settings.get(
         'document_language', defaults['document_language'])
     text_format = settings.get('text_format', defaults['text_format'])
+    text_format = f"{text_format}_{run_mode}"
+
     temp_name = get_temp_name('audio')
     summary_path = f'./temp/{temp_name}.mp4'
-    summary_path = run_summary(txt_path, text_model, document_format,
+    summary_path = run_summary(title, txt_path, text_model, document_format,
                                text_format, answer_language=document_language)
     return summary_path
 
@@ -95,3 +98,10 @@ def get_temp_name(prefix=''):
     curr_time = time.struct_time({'tm_sec': time.time()})
     template_str = f"{prefix}-temp-%B-%d-%H-%M-%S"
     return time.strftime(template_str, curr_time)
+
+@router.error(ExceptionTypeFilter(IndexError), F.update.message.as_("message"))
+async def link_not_found(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    invalid_link_msg = replies.answers(id, 'errors')['link_error']
+    await message.answer(invalid_link_msg)
+
