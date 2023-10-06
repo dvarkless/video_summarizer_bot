@@ -1,25 +1,31 @@
+language: template
 welcome: |
   welcome
 
-help: |
+help:
+  message: |
   help message
   sample text
+  description: Displays help message
 
 change_language: 
   message: |
     change bots language
+  description: Change bot's interface language
   button1: "en"
   button2: "rus"
 
 document_format:
   message: |
     Change document output format
+  description: Change output document format
   button1: "pdf"
   button2: "markdown"
 
 document_language:
   message: |
     Receive answer in
+  description: Change document's language
   button1: "auto"
   button2: "English"
   button3: "русский"
@@ -27,6 +33,7 @@ document_language:
 text_format:
   message: |
     Text structure
+  description: Defines text structure
   button1: "full"
   button2: "short"
 
