@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from src.compose.composers import Composer
 from src.compose.markdown import Markdown
 from src.config import Config
@@ -8,13 +10,14 @@ from src.process.prompt import get_prompt
 
 
 def run_summary(
-    text_path,
-    model_name,
-    doc_format,
-    text_structure,
-    text_title=None,
-    answer_language='auto',
-    temp_name='temp'
+        title: str,
+        text_path: str | Path,
+        model_name: str,
+        doc_format: str,
+        text_structure: str,
+        answer_language: str = 'auto',
+        temp_name: str = 'temp',
+        yt_link: str | None = None,
 ):
     # Constants
     document_names = {
@@ -79,7 +82,9 @@ def run_summary(
                                 window_overlap=my_config['window_overlap'],
                                 max_tokens=max_tokens,
                                 )
-    output_dict = summary.run(text_path, doc_name=text_title)
+    output_dict = summary.run(text_path, doc_name=title)
+    if yt_link is not None:
+        output_dict['link'] = yt_link
     # Compose and save summary document
     document = document_names[doc_format]('./temp', temp_name)
     composer = Composer(document)
@@ -104,10 +109,7 @@ def get_text_youtube(link, model_name, temp_name='temp'):
     my_config = models_config[model_name]
     model_provider = ConfigureModel(model_name, my_config)
     transcriber = TranscribeYoutube(model_provider, f"./temp/{temp_name}.mp4")
-    try:
-        transcriber.load_link(link)
-    except Exception:
-        return None
+    transcriber.load_link(link)
     text = transcriber.transcribe_youtube()
     title = transcriber.yt.title or 'title'
     return text, title
