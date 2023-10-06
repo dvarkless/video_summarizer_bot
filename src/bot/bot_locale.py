@@ -22,7 +22,7 @@ class BotReply(metaclass=Singleton):
     locale_dir = './configs/bot_locale/'
 
     def __init__(self) -> None:
-        locale_dir = self.locale_dir
+        locale_dir = Path(self.locale_dir)
         self.locales = []
         for config_path in locale_dir.iterdir():
             if config_path.suffix == '.yml':
@@ -36,10 +36,6 @@ class BotReply(metaclass=Singleton):
 
         self.replicas = dict()
         self.user_lang = dict()
-
-    def _get_user_lang(self, user_id):
-        # DB access
-        pass
 
     def _get_position(self, user_id, scope, message=None):
         user_lang = self.user_lang.get(user_id, None)
@@ -55,13 +51,16 @@ class BotReply(metaclass=Singleton):
     def answers(self, user_id: int, scope: str):
         return self._get_position(user_id, scope)
 
-    def possible_answers(self, scope):
+    def description(self, user_id, scope):
+        return self._get_position(user_id, scope, 'description')
+
+    def buttons(self, scope):
         to_return = []
         for replica in self.replicas.values():
             replica = replica.copy()
-            replica.pop('message')
-            answers = replica[scope].values()
-            for answer in answers:
-                to_return.append(answer)
+            for key, val in replica[scope].items():
+                if 'button' in key:
+                    to_return.append(val)
+
         return to_return
 
