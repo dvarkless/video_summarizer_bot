@@ -18,7 +18,7 @@ async def language_handler(message: Message) -> None:
     )
 
 
-@router.message(F.text in replies.possible_answers('change_language'))
+@router.message(F.text.in_(replies.buttons('change_language')))
 async def language_answer(message: Message):
     await message.answer(
         replies.answers(message.from_user.id, 'general')['success'],
@@ -35,7 +35,7 @@ async def format_handler(message: Message) -> None:
     )
 
 
-@router.message(F.text in replies.possible_answers('document_format'))
+@router.message(F.text.in_(replies.buttons('document_format')))
 async def format_answer(message: Message):
     await message.answer(
         replies.answers(message.from_user.id, 'general')['success'],
@@ -52,7 +52,7 @@ async def structure_handler(message: Message) -> None:
     )
 
 
-@router.message(F.text in replies.possible_answers('text_format'))
+@router.message(F.text.in_(replies.buttons('text_format')))
 async def structure_answer(message: Message):
     await message.answer(
         replies.answers(message.from_user.id, 'general')['success'],
@@ -69,7 +69,7 @@ async def doclang_handler(message: Message) -> None:
     )
 
 
-@router.message(F.text in replies.possible_answers('document_language'))
+@router.message(F.text.in_(replies.buttons('document_language')))
 async def doclang_answer(message: Message):
     await message.answer(
         replies.answers(message.from_user.id, 'general')['success'],
