@@ -1,5 +1,5 @@
 from bson import ObjectId
-from src.bot.bot_locale import Singleton
+from src.singleton import Singleton
 from src.config import Config
 from pymongo import MongoClient
 from functools import wraps
@@ -23,26 +23,15 @@ class Database(metaclass=Singleton):
         self.settings_name = config['settings_collection']
         self.tokens_name = config['tokens_collection']
         self.client = MongoClient(self.url)
+        self.settings_default = Config('./configs/defaults.yaml')
+        self.tokens_default = Config('./configs/token_defaults.yaml')
 
     def __enter__(self):
         self.db = self.client[self.name]
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        del self
-
-    @property
-    def _id(self):
-        return ObjectId(self.__id)
-
-    @_id.setter
-    def _id(self, id):
-        id = str(id)
-        self.__id = id
-
-    def proper_id(self, id):
-        self._id = id
-        return self._id
+        del self.db
 
     @property
     @has_db
@@ -56,10 +45,34 @@ class Database(metaclass=Singleton):
 
     @has_db
     def get_settings(self, user_id):
-        self._id = user_id
-        return self.db[self.settings_name].find_one({'_id': self._id})
+        out_dict = self.db[self.settings_name].find_one({'user_id': user_id})
+        if out_dict is None:
+            self.init_db_settings(user_id)
+        return out_dict or {}
 
     @has_db
     def get_tokens(self, user_id):
-        self._id = user_id
-        return self.db[self.tokens_name].find_one({'_id': self._id})
+        out_dict = self.db[self.tokens_name].find_one({'user_id': user_id})
+        return out_dict or {}
+
+    @has_db
+    def update_settings(self, user_id, data):
+        id_dict = {'user_id': user_id}
+        data |= id_dict
+        self.db[self.tokens_name].update_one(id_dict, data)
+
+    @has_db
+    def update_tokens(self, user_id, data):
+        id_dict = {'user_id': user_id}
+        data |= id_dict
+        self.db[self.tokens_name].update_one(id_dict, data)
+
+    @has_db
+    def init_db_settings(self, user_id):
+        user_defaults = self.settings_default.data | {'user_id': user_id}
+        self.db[self.settings_name].insert_one(user_defaults)
+
+    @has_db
+    def init_db_tokens(self, user_id):
+        user_defaults = self.tokens_default.data | {'user_id': user_id}
+        self.db[self.tokens_name].insert_one(user_defaults)
