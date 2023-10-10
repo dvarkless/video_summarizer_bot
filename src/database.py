@@ -56,16 +56,34 @@ class Database(metaclass=Singleton):
         return out_dict or {}
 
     @has_db
-    def update_settings(self, user_id, data):
+    def update_settings(self, user_id, data, _i=1):
         id_dict = {'user_id': user_id}
         data |= id_dict
-        self.db[self.tokens_name].update_one(id_dict, data)
+        my_data = self.db[self.settings_name].find_one({'user_id': user_id})
+        if my_data is None:
+            if _i > 5:
+                raise ValueError('Invalid document initiation for "settings"')
+            self.init_db_settings(user_id)
+            self.update_settings(user_id, data, _i=_i+1)
+            return
+        for key, val in data.items():
+            my_data[key] = val
+        self.db[self.settings_name].replace_one({'user_id': user_id}, my_data)
 
     @has_db
-    def update_tokens(self, user_id, data):
+    def update_tokens(self, user_id, data, _i=1):
         id_dict = {'user_id': user_id}
         data |= id_dict
-        self.db[self.tokens_name].update_one(id_dict, data)
+        my_data = self.db[self.tokens_name].find_one({'user_id': user_id})
+        if my_data is None:
+            if _i > 5:
+                raise ValueError('Invalid document initiation for "tokens"')
+            self.init_db_settings(user_id)
+            self.update_tokens(user_id, data, _i=_i+1)
+            return
+        for key, val in data.items():
+            my_data[key] = val
+        self.db[self.tokens_name].replace_one({'user_id': user_id}, my_data)
 
     @has_db
     def init_db_settings(self, user_id):
