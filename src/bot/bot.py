@@ -10,23 +10,21 @@ from src.config import Config
 from src.setup_handler import get_handler
 
 
-async def set_default_commands(bot: Bot):
+async def set_default_commands(bot: Bot, language='English'):
     replicas = BotReply().replicas
     bot_commands = []
-    for lang, vals in replicas.items():
-        code = vals['code']
-        if code is None:
-            continue
-        for key, val in vals.items():
-            if key not in ('language', 'general', 'errors', 'welcome', 'code'):
-                try:
-                    cmd_desc = val['description']
-                except KeyError:
-                    raise KeyError(f'command "{key}" does not have description')
-                bot_commands.append(
-                    types.BotCommand(command=f'/{key}', description=cmd_desc))
-        # Check language codes
-        await bot.set_my_commands(bot_commands, language_code=code)
+    vals = replicas[language]
+    code = vals['code']
+    for key, val in vals.items():
+        if key not in ('language', 'general', 'errors', 'welcome', 'code'):
+            try:
+                cmd_desc = val['description']
+            except KeyError:
+                raise KeyError(f'command "{key}" does not have description')
+            bot_commands.append(
+                types.BotCommand(command=f'/{key}', description=cmd_desc))
+    # Check language codes
+    await bot.set_my_commands(bot_commands, language_code=code)
 
 
 async def main() -> None:
