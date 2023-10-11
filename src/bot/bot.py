@@ -6,8 +6,11 @@ from aiogram import Bot, Dispatcher, types
 from src.bot.action_handlers import router as action_router
 from src.bot.bot_locale import BotReply
 from src.bot.settings import router as settings_router
+from src.bot.admin_info import router as admin_actions_router
 from src.config import Config
 from src.setup_handler import get_handler
+
+SECRETS_PATH = './configs/secrets.yaml'
 
 
 async def set_default_commands(bot: Bot, language='English'):
@@ -16,7 +19,7 @@ async def set_default_commands(bot: Bot, language='English'):
     vals = replicas[language]
     code = vals['code']
     for key, val in vals.items():
-        if key not in ('language', 'general', 'errors', 'welcome', 'code'):
+        if key not in ('language', 'general', 'errors', 'code'):
             try:
                 cmd_desc = val['description']
             except KeyError:
@@ -28,8 +31,11 @@ async def set_default_commands(bot: Bot, language='English'):
 
 
 async def main() -> None:
-    TOKEN = Config('./configs/secrets.yaml')['telegram_token']
-
+    TOKEN = Config(SECRETS_PATH)['telegram_token']
+    try:
+        admin_id = Config(SECRETS_PATH)['admin_id']
+    except KeyError:
+        admin_id = None
     # All handlers should be attached to the Router (or Dispatcher)
     bot = Bot(token=TOKEN, parse_mode="HTML")
     dp = Dispatcher()
@@ -37,7 +43,10 @@ async def main() -> None:
     logger.addHandler(get_handler())
 
     await set_default_commands(bot)
-    dp.include_routers(settings_router, action_router)
+    if admin_id is not None:
+        dp.include_router(admin_actions_router)
+    dp.include_router(settings_router)
+    dp.include_router(action_router)
     await bot.delete_webhook(drop_pending_updates=True)
     print("bot activated")
     await dp.start_polling(bot)
