@@ -22,9 +22,11 @@ class Database(metaclass=Singleton):
         self.name = config['mongodb_name']
         self.settings_name = config['settings_collection']
         self.tokens_name = config['tokens_collection']
+        self.telegram_name = config['telegram_collection']
         self.client = MongoClient(self.url)
         self.settings_default = Config('./configs/defaults.yaml')
         self.tokens_default = Config('./configs/token_defaults.yaml')
+        self.telegram_default = Config('./configs/token_defaults.yaml')
 
     def __enter__(self):
         self.db = self.client[self.name]
@@ -43,6 +45,11 @@ class Database(metaclass=Singleton):
     def tokens(self):
         return self.db[self.tokens_name]
 
+    @property
+    @has_db
+    def telegram(self):
+        return self.db[self.telegram_name]
+
     @has_db
     def get_settings(self, user_id):
         out_dict = self.db[self.settings_name].find_one({'user_id': user_id})
@@ -54,6 +61,26 @@ class Database(metaclass=Singleton):
     def get_tokens(self, user_id):
         out_dict = self.db[self.tokens_name].find_one({'user_id': user_id})
         return out_dict or {}
+
+    @has_db
+    def get_telegram(self, user_id):
+        out_dict = self.db[self.telegram_name].find_one({'user_id': user_id})
+        return out_dict or {}
+
+    @has_db
+    def update_telegram(self, user_id, data, _i=1):
+        id_dict = {'user_id': user_id}
+        data |= id_dict
+        my_data = self.db[self.telegram_name].find_one({'user_id': user_id})
+        if my_data is None:
+            if _i > 5:
+                raise ValueError('Invalid document initiation for "telegram"')
+            self.init_db_telegram(user_id)
+            self.update_telegram(user_id, data, _i=_i+1)
+            return
+        for key, val in data.items():
+            my_data[key] = val
+        self.db[self.settings_name].replace_one({'user_id': user_id}, my_data)
 
     @has_db
     def update_settings(self, user_id, data, _i=1):
@@ -84,6 +111,11 @@ class Database(metaclass=Singleton):
         for key, val in data.items():
             my_data[key] = val
         self.db[self.tokens_name].replace_one({'user_id': user_id}, my_data)
+
+    @has_db
+    def init_db_telegram(self, user_id):
+        user_defaults = self.telegram_default.data | {'user_id': user_id}
+        self.db[self.telegram_name].insert_one(user_defaults)
 
     @has_db
     def init_db_settings(self, user_id):
