@@ -1,30 +1,36 @@
-language: template
-welcome: |
-  welcome
+language: English
+code: en
+start: 
+  message: |
+    welcome message
+  description: Start bot
 
+cancel:
+  message: canceled
+  description: Cancel current task
 help:
   message: |
-  help message
-  sample text
+    help message
+    sample text
   description: Displays help message
 
 change_language: 
   message: |
-    change bots language
+    "change bots language to:"
   description: Change bot's interface language
-  button1: "en"
-  button2: "rus"
+  button1: "English"
+  button2: "русский"
 
 document_format:
   message: |
-    Change document output format
+    "Change document output format to:"
   description: Change output document format
   button1: "pdf"
   button2: "markdown"
 
 document_language:
   message: |
-    Receive answer in
+    "Receive answer in"
   description: Change document's language
   button1: "auto"
   button2: "English"
@@ -32,7 +38,7 @@ document_language:
 
 text_format:
   message: |
-    Text structure
+    "Text structure is"
   description: Defines text structure
   button1: "full"
   button2: "short"
@@ -40,7 +46,10 @@ text_format:
 general:
   success: Success!
   document_caption: Here is your summary!
+  startup: Bot started
+  shutdown: Bot shutdown
 
 errors:
   critical: "Critical Error"
   link_error: "Bad link"
+  unknown_setting: "You chose a wrong setting, use keyboard next time or check configs"
