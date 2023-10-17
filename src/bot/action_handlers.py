@@ -1,5 +1,7 @@
 import re
 from datetime import datetime
+from pathlib import Path
+from traceback import format_exception
 
 from aiogram import Bot, F, Router
 from aiogram.filters import command
@@ -8,8 +10,8 @@ from aiogram.types import ErrorEvent, FSInputFile, Message
 
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
-from src.bot.exceptions import (ComposerError, ConfigAccessError, LinkError,
-                                LLMError, AudioModelError)
+from src.bot.exceptions import (AudioModelError, ComposerError,
+                                ConfigAccessError, LinkError, LLMError)
 from src.config import Config
 from src.database import Database
 
@@ -60,7 +62,7 @@ async def link_handler(message: Message) -> None:
             'got_link']
     )
 
-    summary_path = bot_run_summary(user_id, yt_link=link)
+    summary_path = bot_run_summary(user_id, yt_link=link, context=message)
 
     doc_file = FSInputFile(summary_path)
     caption = replies.answers(message.from_user.id, 'general')[
@@ -71,7 +73,10 @@ async def link_handler(message: Message) -> None:
     )
 
 
-def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
+def bot_run_summary(user_id, video_path=None,
+                    yt_link=None, title='Title',
+                    context: Message | None = None
+                    ) -> str:
     if video_path is not None:
         run_mode = 'video'
     if yt_link is not None:
@@ -82,7 +87,6 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
         settings = db.get_settings(user_id)
 
     audio_model = settings.get('audio_model', defaults['audio_model'])
-
     temp_name = get_temp_name('audio')
     if run_mode == 'video':
         text = get_text_local(video_path, audio_model, temp_name)
@@ -106,8 +110,11 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
 
     temp_name = get_temp_name('audio')
     summary_path = f'./temp/{temp_name}.mp4'
-    summary_path = run_summary(title, txt_path, text_model, document_format,
-                               text_format, answer_language=document_language)
+    run_summary(title, txt_path, text_model, document_format,
+                text_format, answer_language=document_language,
+                temp_name=get_temp_name('file'))
+
+    Path(txt_path).unlink(missing_ok=True)
     return summary_path
 
 
@@ -123,39 +130,63 @@ def get_temp_name(prefix=''):
 async def link_not_found(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['bad_link']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
 
 
 @router.error(ExceptionTypeFilter(LLMError), F.update.message.as_("message"))
 async def llm_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['llm']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
 
 
 @router.error(ExceptionTypeFilter(ConfigAccessError), F.update.message.as_("message"))
 async def config_access_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['config_access']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
 
 
 @router.error(ExceptionTypeFilter(ComposerError), F.update.message.as_("message"))
 async def composer_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['composer']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
 
 
 @router.error(ExceptionTypeFilter(AudioModelError), F.update.message.as_("message"))
 async def audio_model_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['audio_model']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
 
 
 @router.error(ExceptionTypeFilter(FileNotFoundError), F.update.message.as_("message"))
+async def critical_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['critical']
+    await error_handler(event, message, error_msg)
+
+
+@router.error(F.update.message.as_("message"))
 async def file_not_found(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['file_not_found']
-    await message.answer(error_msg)
+    await error_handler(event, message, error_msg)
+
+
+async def error_handler(event: ErrorEvent, message: Message, error_msg: str):
+    id = message.from_user.id
+    with database as db:
+        user_data = db.get_telegram(id)
+    if user_data.get('is_admin', False):
+        exc_type = type(event.exception)
+        exc_val = event.exception
+        tb = event.exception.__traceback__
+        tb_message = ''.join(format_exception(exc_type, exc_val, tb, limit=5))
+        admin_answer = f"\nTraceback:\n```python\n{tb_message}\n```"
+    else:
+        admin_answer = ''
+
+    msg = error_msg + admin_answer
+    await message.answer(msg, parse_mode='MarkdownV2')
