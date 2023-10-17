@@ -8,6 +8,8 @@ from aiogram.types import ErrorEvent, FSInputFile, Message
 
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
+from src.bot.exceptions import (ComposerError, ConfigAccessError, LinkError,
+                                LLMError)
 from src.config import Config
 from src.database import Database
 
@@ -30,7 +32,7 @@ async def video_handler(message: Message, bot: Bot) -> None:
     await message.answer(
         replies.answers(message.from_user.id, 'general')[
             'got_link']
-            )
+    )
 
     summary_path = bot_run_summary(
         user_id, video_path=file_path, title=file_name)
@@ -47,14 +49,16 @@ async def video_handler(message: Message, bot: Bot) -> None:
 @router.message(F.text)
 async def link_handler(message: Message) -> None:
     user_id = message.from_user.id
-    get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
-    # IndexError if link is invalid
-    link = get_link_regex.findall(message.text)[0]
+    try:
+        get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
+        link = get_link_regex.findall(message.text)[0]
+    except IndexError as ex:
+        raise LinkError("The provided text is not a link from youtube") from ex
 
     await message.answer(
         replies.answers(message.from_user.id, 'general')[
             'got_link']
-            )
+    )
 
     summary_path = bot_run_summary(user_id, yt_link=link)
 
@@ -109,14 +113,41 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
 
 def get_temp_name(prefix=''):
     curr_d = datetime.now()
-    curr_t = curr_d.strftime("-temp-%B-%d-%H-%M-%S")
+    curr_t = curr_d.strftime("temp-%B-%d-%H-%M-%S")
     if prefix:
-        prefix = prefix + '_'
+        prefix = prefix + '-'
     return prefix + curr_t
 
 
-@router.error(ExceptionTypeFilter(IndexError), F.update.message.as_("message"))
+@router.error(ExceptionTypeFilter(LinkError), F.update.message.as_("message"))
 async def link_not_found(event: ErrorEvent, message: Message):
     id = message.from_user.id
-    invalid_link_msg = replies.answers(id, 'errors')['link_error']
-    await message.answer(invalid_link_msg)
+    error_msg = replies.answers(id, 'errors')['bad_link']
+    await message.answer(error_msg)
+
+
+@router.error(ExceptionTypeFilter(LLMError), F.update.message.as_("message"))
+async def llm_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['llm']
+    await message.answer(error_msg)
+
+
+@router.error(ExceptionTypeFilter(ConfigAccessError), F.update.message.as_("message"))
+async def config_access_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['config_access']
+    await message.answer(error_msg)
+
+
+@router.error(ExceptionTypeFilter(ComposerError), F.update.message.as_("message"))
+async def composer_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['composer']
+    await message.answer(error_msg)
+
+@router.error(ExceptionTypeFilter(FileNotFoundError), F.update.message.as_("message"))
+async def file_not_found(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['file_not_found']
+    await message.answer(error_msg)

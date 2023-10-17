@@ -7,6 +7,7 @@ from src.process.agent import MapReduceSplitter
 from src.process.file_process import Transcribe, TranscribeYoutube
 from src.process.model import ConfigureModel
 from src.process.prompt import get_prompt
+from src.bot.exceptions import LLMError, ConfigAccessError, ComposerError, LinkError
 
 
 def run_summary(
@@ -25,14 +26,28 @@ def run_summary(
     }
     # Configs
     models_config = Config('./configs/models_text.yaml')
-    my_config = models_config[model_name]
-    max_tokens = my_config['available_context']
-    model_provider = ConfigureModel(model_name, models_config)
+    try:
+        my_config = models_config[model_name]
+        max_tokens = my_config['available_context']
+        model_provider = ConfigureModel(model_name, models_config)
+    except KeyError as ex:
+        raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
+    except Exception as ex:
+        raise LLMError('Error in model creation') from ex
 
     embeddings_config = Config("./configs/embeddings.yaml")
-    embeddings_provider = ConfigureModel(model_name, embeddings_config)
+    try:
+        embeddings_provider = ConfigureModel(model_name, embeddings_config)
+    except KeyError as ex:
+        raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
+    except Exception as ex:
+        raise LLMError('Error in model creation') from ex
 
-    summary_prompt_config = Config("./configs/prompts.yaml")[text_structure]
+    try:
+        summary_prompt_config = Config("./configs/prompts.yaml")[text_structure]
+    except KeyError as ex:
+        raise ConfigAccessError(f"Unknown config name: '{text_structure}'") from ex
+
     if answer_language == 'auto':
         language_prompt = ", write your answer in the same language used in the text"
     else:
@@ -72,42 +87,52 @@ def run_summary(
                            for name, prompt in zip(
                                summary_prompt_config['premap_name'], postmap_prompt)}
     # Text summary
-    summary = MapReduceSplitter(model_provider,
-                                embeddings_provider,
-                                map_prompt,
-                                reduce_prompt,
-                                premap_prompts=premap_prompts,
-                                postmap_prompts=postmap_prompts,
-                                window_len=my_config['window_len'],
-                                window_overlap=my_config['window_overlap'],
-                                max_tokens=max_tokens,
-                                )
-    output_dict = summary.run(text_path, doc_name=title)
+    try:
+        summary = MapReduceSplitter(model_provider,
+                                    embeddings_provider,
+                                    map_prompt,
+                                    reduce_prompt,
+                                    premap_prompts=premap_prompts,
+                                    postmap_prompts=postmap_prompts,
+                                    window_len=my_config['window_len'],
+                                    window_overlap=my_config['window_overlap'],
+                                    max_tokens=max_tokens,
+                                    )
+        output_dict = summary.run(text_path, doc_name=title)
+    except Exception as ex:
+        raise LLMError('Error in MapReduceSplitter') from ex
     if yt_link is not None:
         output_dict['link'] = yt_link
     # Compose and save summary document
     document = document_names[doc_format]('./temp', temp_name)
-    composer = Composer(document)
-    if text_structure == 'facts_youtube':
-        composer.facts_youtube(output_dict)
-    elif text_structure == 'facts_video':
-        composer.facts_video(output_dict)
+    try:
+        composer = Composer(document)
+        if text_structure == 'facts_youtube':
+            composer.facts_youtube(output_dict)
+        elif text_structure == 'facts_video':
+            composer.facts_video(output_dict)
 
-    elif text_structure == 'speech_youtube':
-        composer.speech_youtube(output_dict)
-    elif text_structure == 'speech_video':
-        composer.speech_video(output_dict)
+        elif text_structure == 'speech_youtube':
+            composer.speech_youtube(output_dict)
+        elif text_structure == 'speech_video':
+            composer.speech_video(output_dict)
 
-    elif text_structure == 'dry_youtube':
-        composer.dry_youtube(output_dict)
-    elif text_structure == 'dry_video':
-        composer.dry_video(output_dict)
+        elif text_structure == 'dry_youtube':
+            composer.dry_youtube(output_dict)
+        elif text_structure == 'dry_video':
+            composer.dry_video(output_dict)
+    except Exception as ex:
+        raise ComposerError('Error while composing document') from ex
 
 
 def get_text_youtube(link, model_name, temp_name='temp'):
     models_config = Config('./configs/models_audio.yaml')
-    my_config = models_config[model_name]
-    model_provider = ConfigureModel(model_name, my_config)
+    try:
+        model_provider = ConfigureModel(model_name, models_config)
+    except KeyError as ex:
+        raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
+    except Exception as ex:
+        raise LLMError('Error in model creation') from ex
     transcriber = TranscribeYoutube(model_provider, f"./temp/{temp_name}.mp4")
     transcriber.load_link(link)
     text = transcriber.transcribe_youtube()
@@ -117,8 +142,12 @@ def get_text_youtube(link, model_name, temp_name='temp'):
 
 def get_text_local(file_path, model_name, temp_name='temp'):
     models_config = Config('./configs/models_audio.yaml')
-    my_config = models_config[model_name]
-    model_provider = ConfigureModel(model_name, my_config)
+    try:
+        model_provider = ConfigureModel(model_name, models_config)
+    except KeyError as ex:
+        raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
+    except Exception as ex:
+        raise LLMError('Error in model creation') from ex
     transcriber = Transcribe(model_provider, f"./temp/{temp_name}.mp4")
     text = transcriber.transcribe_file(file_path)
     return text
