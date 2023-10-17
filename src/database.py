@@ -26,7 +26,7 @@ class Database(metaclass=Singleton):
         self.client = MongoClient(self.url)
         self.settings_default = Config('./configs/defaults.yaml')
         self.tokens_default = Config('./configs/token_defaults.yaml')
-        self.telegram_default = Config('./configs/token_defaults.yaml')
+        self.telegram_default = Config('./configs/telegram_defaults.yaml')
 
     def __enter__(self):
         self.db = self.client[self.name]
@@ -80,7 +80,7 @@ class Database(metaclass=Singleton):
             return
         for key, val in data.items():
             my_data[key] = val
-        self.db[self.settings_name].replace_one({'user_id': user_id}, my_data)
+        self.db[self.telegram_name].replace_one({'user_id': user_id}, my_data)
 
     @has_db
     def update_settings(self, user_id, data, _i=1):
