@@ -61,7 +61,7 @@ def run_summary(
     # Prompts
     premap_prompts = get_prompt(
         summary_prompt_config["premap"],
-        prompt_name=summary_prompt_config["premap_name"],
+        prompt_name=summary_prompt_config.get("premap_name", None),
         constant_dict=model_template
         )
     map_prompts = get_prompt(
@@ -70,7 +70,7 @@ def run_summary(
         )
     postmap_prompts = get_prompt(
         summary_prompt_config["postmap"],
-        prompt_name=summary_prompt_config["postmap_name"],
+        prompt_name=summary_prompt_config.get("postmap_name", None),
         constant_dict=model_template
         )
     reduce_prompts = get_prompt(
@@ -121,6 +121,7 @@ def run_summary(
 
 def get_text_youtube(link, model_name, temp_name='temp'):
     models_config = Config('./configs/models_audio.yaml')
+    temp_path = f"./temp/{temp_name}.mp4"
     try:
         model_provider = ConfigureModel(model_name, models_config)
     except KeyError as ex:
@@ -129,7 +130,7 @@ def get_text_youtube(link, model_name, temp_name='temp'):
         raise LLMError('Error in model creation') from ex
 
     try:
-        transcriber = TranscribeYoutube(model_provider, f"./temp/{temp_name}.mp4")
+        transcriber = TranscribeYoutube(model_provider, temp_path)
         transcriber.load_link(link)
     except Exception as ex:
         raise LinkError("Could not load video from the provided yt link") from ex
@@ -138,12 +139,15 @@ def get_text_youtube(link, model_name, temp_name='temp'):
         text = transcriber.transcribe_youtube()
     except Exception as ex:
         raise AudioModelError('Error while transcribing video from yt') from ex
-    title = transcriber.yt.title or 'title'
+    title = transcriber.yt.title.casefold() or 'title'
+
+    Path(temp_path).unlink(missing_ok=True)
     return text, title
 
 
 def get_text_local(file_path, model_name, temp_name='temp'):
     models_config = Config('./configs/models_audio.yaml')
+    temp_path = f"./temp/{temp_name}.mp4"
     try:
         model_provider = ConfigureModel(model_name, models_config)
     except KeyError as ex:
@@ -152,8 +156,11 @@ def get_text_local(file_path, model_name, temp_name='temp'):
         raise LLMError('Error in model creation') from ex
 
     try:
-        transcriber = Transcribe(model_provider, f"./temp/{temp_name}.mp4")
+        transcriber = Transcribe(model_provider, temp_path)
         text = transcriber.transcribe_file(file_path)
     except Exception as ex:
         raise AudioModelError('Error while transcribing video from local file') from ex
+
+    Path(file_path).unlink(missing_ok=True)
+    Path(temp_path).unlink(missing_ok=True)
     return text
