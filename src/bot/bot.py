@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher, types
+from pymongo import database
 
 from src.bot.action_handlers import router as action_router
 from src.bot.bot_locale import BotReply
@@ -9,9 +10,10 @@ from src.bot.settings import router as settings_router
 from src.bot.admin_info import router as admin_actions_router
 from src.config import Config
 from src.setup_handler import get_handler
+from src.database import Database
 
 SECRETS_PATH = './configs/secrets.yaml'
-
+database = Database()
 
 async def set_default_commands(bot: Bot, language='English'):
     replicas = BotReply().replicas
@@ -36,6 +38,11 @@ async def main() -> None:
         admin_id = Config(SECRETS_PATH)['admin_id']
     except KeyError:
         admin_id = None
+
+    if admin_id is not None:
+        with database as db:
+            db.update_telegram(admin_id, {'is_admin': True})
+
     # All handlers should be attached to the Router (or Dispatcher)
     bot = Bot(token=TOKEN, parse_mode="HTML")
     dp = Dispatcher()
