@@ -1,5 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cu117
-torch
+torch --index-url https://download.pytorch.org/whl/cu118
+torchaudio --index-url https://download.pytorch.org/whl/cu118
 langchain[llms]
 aiogram
 pyyaml
@@ -9,3 +9,5 @@ llama-cpp-python
 scikit-learn
 pytubefix
 faster-whisper
+nvidia-cublas-cu11
+nvidia-cudnn-cu11
