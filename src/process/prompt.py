@@ -33,20 +33,27 @@ def get_prompt(
         prompt_name: str | List | None = None,
         constant_dict=None
 ) -> dict:
-    if file_name is None:
+    if file_name is None or file_name == 'None':
         return {}
     to_return = {}
 
     if isinstance(file_name, str):
-        file_name = (file_name)
-    if isinstance(prompt_name, str):
-        prompt_name = (prompt_name)
-    assert len(file_name) >= len(prompt_name)
+        files = (file_name,)
+    else:
+        files = file_name
+    if isinstance(prompt_name, str) or prompt_name is None:
+        prompts = (prompt_name,)
+    else:
+        prompts = prompt_name
+    assert len(files) >= len(prompts)
 
-    for single_file, name in zip_longest(file_name, prompt_name):
+    for single_file, name in zip_longest(files, prompts):
         single_file = Path(single_file)
         if not single_file.exists():
             single_file = fix_relative_path(single_file)
+        if not single_file.exists():
+            raise FileNotFoundError(
+                f'Something wrong with file name "{single_file} in get_prompt"')
         with open(single_file, 'r') as f:
             text = f.read()
 
