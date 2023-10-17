@@ -12,3 +12,7 @@ class LLMError(Exception):
 
 class ComposerError(Exception):
     pass
+
+
+class AudioModelError(Exception):
+    pass

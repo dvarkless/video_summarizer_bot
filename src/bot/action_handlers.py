@@ -9,7 +9,7 @@ from aiogram.types import ErrorEvent, FSInputFile, Message
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (ComposerError, ConfigAccessError, LinkError,
-                                LLMError)
+                                LLMError, AudioModelError)
 from src.config import Config
 from src.database import Database
 
@@ -31,7 +31,7 @@ async def video_handler(message: Message, bot: Bot) -> None:
 
     await message.answer(
         replies.answers(message.from_user.id, 'general')[
-            'got_link']
+            'got_video']
     )
 
     summary_path = bot_run_summary(
@@ -49,8 +49,8 @@ async def video_handler(message: Message, bot: Bot) -> None:
 @router.message(F.text)
 async def link_handler(message: Message) -> None:
     user_id = message.from_user.id
+    get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
     try:
-        get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
         link = get_link_regex.findall(message.text)[0]
     except IndexError as ex:
         raise LinkError("The provided text is not a link from youtube") from ex
@@ -145,6 +145,14 @@ async def composer_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['composer']
     await message.answer(error_msg)
+
+
+@router.error(ExceptionTypeFilter(AudioModelError), F.update.message.as_("message"))
+async def audio_model_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['audio_model']
+    await message.answer(error_msg)
+
 
 @router.error(ExceptionTypeFilter(FileNotFoundError), F.update.message.as_("message"))
 async def file_not_found(event: ErrorEvent, message: Message):

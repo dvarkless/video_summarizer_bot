@@ -45,11 +45,19 @@ text_format:
 
 general:
   success: Success!
+  got_link: Processing youtube video...
+  got_video: Processing video...
+  caption: Here is your document
   document_caption: Here is your summary!
   startup: Bot started
   shutdown: Bot shutdown
 
 errors:
   critical: "Critical Error"
-  link_error: "Bad link"
+  bad_link: "Bad link"
+  config_access: "Error: could not access config file with the provided keyword"
+  composer: "Error in document generation"
+  llm: "Error in text generation module"
+  audio_model: "Error in transcription process"
+  file_not_found: "Could not find file in the provided path"
   unknown_setting: "You chose a wrong setting, use keyboard next time or check configs"

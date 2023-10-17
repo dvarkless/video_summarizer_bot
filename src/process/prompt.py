@@ -1,4 +1,5 @@
 import string
+from itertools import zip_longest
 from pathlib import Path
 from typing import List
 
@@ -7,6 +8,7 @@ from langchain.prompts import PromptTemplate
 from src.config import fix_relative_path
 
 
+# This allows to leave some figure brackets in a string unformatted
 class StringTemplate(object):
     class FormatDict(dict):
         def __missing__(self, key):
@@ -26,15 +28,22 @@ class StringTemplate(object):
         return self.__repr__()
 
 
-def get_prompt(file_name: str | List, constant_dict=None) -> None | str | List:
+def get_prompt(
+        file_name: str | List,
+        prompt_name: str | List | None = None,
+        constant_dict=None
+) -> dict:
     if file_name is None:
-        return None
-    to_return = []
+        return {}
+    to_return = {}
 
     if isinstance(file_name, str):
         file_name = (file_name)
+    if isinstance(prompt_name, str):
+        prompt_name = (prompt_name)
+    assert len(file_name) >= len(prompt_name)
 
-    for single_file in file_name:
+    for single_file, name in zip_longest(file_name, prompt_name):
         single_file = Path(single_file)
         if not single_file.exists():
             single_file = fix_relative_path(single_file)
@@ -45,9 +54,8 @@ def get_prompt(file_name: str | List, constant_dict=None) -> None | str | List:
             text = StringTemplate(text)
             text = text.format(**constant_dict)
 
-        to_return.append(PromptTemplate.from_template(text))
+        if name is None:
+            name = single_file.name
+        to_return[name] = PromptTemplate.from_template(text)
 
-    if len(to_return) == 1:
-        return to_return[0]
-    else:
-        return to_return
+    return to_return

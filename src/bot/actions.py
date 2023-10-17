@@ -7,7 +7,7 @@ from src.process.agent import MapReduceSplitter
 from src.process.file_process import Transcribe, TranscribeYoutube
 from src.process.model import ConfigureModel
 from src.process.prompt import get_prompt
-from src.bot.exceptions import LLMError, ConfigAccessError, ComposerError, LinkError
+from src.bot.exceptions import LLMError, ConfigAccessError, ComposerError, LinkError, AudioModelError
 
 
 def run_summary(
@@ -59,33 +59,27 @@ def run_summary(
         'misc': language_prompt,
     }
     # Prompts
-    premap_prompt = get_prompt(
-        summary_prompt_config["premap"], model_template)
-    map_prompt = get_prompt(
-        summary_prompt_config["map"], model_template)
-    postmap_prompt = get_prompt(
-        summary_prompt_config["postmap"], model_template)
-    reduce_prompt = get_prompt(
-        summary_prompt_config["reduce"], model_template)
-    # Handle different return types
-    if premap_prompt is None:
-        premap_prompts = None
-    elif isinstance(premap_prompt, str):
-        premap_prompts = {summary_prompt_config["premap_name"]: premap_prompt}
-    else:
-        premap_prompts = {name: prompt
-                          for name, prompt in zip(
-                              summary_prompt_config['premap_name'], premap_prompt)}
+    premap_prompts = get_prompt(
+        summary_prompt_config["premap"],
+        prompt_name=summary_prompt_config["premap_name"],
+        constant_dict=model_template
+        )
+    map_prompts = get_prompt(
+        summary_prompt_config["map"],
+        constant_dict=model_template
+        )
+    postmap_prompts = get_prompt(
+        summary_prompt_config["postmap"],
+        prompt_name=summary_prompt_config["postmap_name"],
+        constant_dict=model_template
+        )
+    reduce_prompts = get_prompt(
+        summary_prompt_config["reduce"],
+        constant_dict=model_template
+        )
+    map_prompt = list(map_prompts.values())[0]
+    reduce_prompt = list(reduce_prompts.values())[0]
 
-    if postmap_prompt is None:
-        postmap_prompts = None
-    elif isinstance(postmap_prompt, str) or postmap_prompt is None:
-        postmap_prompts = {
-            summary_prompt_config["postmap_name"]: postmap_prompt}
-    else:
-        postmap_prompts = {name: prompt
-                           for name, prompt in zip(
-                               summary_prompt_config['premap_name'], postmap_prompt)}
     # Text summary
     try:
         summary = MapReduceSplitter(model_provider,
@@ -133,9 +127,17 @@ def get_text_youtube(link, model_name, temp_name='temp'):
         raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
     except Exception as ex:
         raise LLMError('Error in model creation') from ex
-    transcriber = TranscribeYoutube(model_provider, f"./temp/{temp_name}.mp4")
-    transcriber.load_link(link)
-    text = transcriber.transcribe_youtube()
+
+    try:
+        transcriber = TranscribeYoutube(model_provider, f"./temp/{temp_name}.mp4")
+        transcriber.load_link(link)
+    except Exception as ex:
+        raise LinkError("Could not load video from the provided yt link") from ex
+
+    try:
+        text = transcriber.transcribe_youtube()
+    except Exception as ex:
+        raise AudioModelError('Error while transcribing video from yt') from ex
     title = transcriber.yt.title or 'title'
     return text, title
 
@@ -148,6 +150,10 @@ def get_text_local(file_path, model_name, temp_name='temp'):
         raise ConfigAccessError(f"Unknown config name: '{model_name}'") from ex
     except Exception as ex:
         raise LLMError('Error in model creation') from ex
-    transcriber = Transcribe(model_provider, f"./temp/{temp_name}.mp4")
-    text = transcriber.transcribe_file(file_path)
+
+    try:
+        transcriber = Transcribe(model_provider, f"./temp/{temp_name}.mp4")
+        text = transcriber.transcribe_file(file_path)
+    except Exception as ex:
+        raise AudioModelError('Error while transcribing video from local file') from ex
     return text
