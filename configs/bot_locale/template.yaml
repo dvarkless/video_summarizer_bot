@@ -25,8 +25,8 @@ document_format:
   message: |
     "Change document output format to:"
   description: Change output document format
-  button1: "pdf"
-  button2: "markdown"
+  button1: "markdown"
+  # button2: "pdf"
 
 document_language:
   message: |
@@ -41,12 +41,14 @@ text_format:
     "Text structure is"
   description: Defines text structure
   button1: "full"
-  button2: "short"
+  button2: "dry"
 
 general:
   success: Success!
   got_link: Processing youtube video...
   got_video: Processing video...
+  transcribing: Transcribing video, please wait...
+  processing: Processing text, please wait...
   caption: Here is your document
   document_caption: Here is your summary!
   startup: Bot started
