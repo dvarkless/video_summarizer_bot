@@ -1,10 +1,10 @@
 import re
-import time
+from datetime import datetime
 
 from aiogram import Bot, F, Router
+from aiogram.filters import command
 from aiogram.filters.exception import ExceptionTypeFilter
-from aiogram.types import ErrorEvent
-from aiogram.types import FSInputFile, Message
+from aiogram.types import ErrorEvent, FSInputFile, Message
 
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
@@ -27,7 +27,13 @@ async def video_handler(message: Message, bot: Bot) -> None:
         destination=file_path
     )
 
-    summary_path = bot_run_summary(user_id, video_path=file_path, title=file_name)
+    await message.answer(
+        replies.answers(message.from_user.id, 'general')[
+            'got_link']
+            )
+
+    summary_path = bot_run_summary(
+        user_id, video_path=file_path, title=file_name)
 
     doc_file = FSInputFile(summary_path)
     caption = replies.answers(message.from_user.id, 'general')[
@@ -45,7 +51,13 @@ async def link_handler(message: Message) -> None:
     # IndexError if link is invalid
     link = get_link_regex.findall(message.text)[0]
 
+    await message.answer(
+        replies.answers(message.from_user.id, 'general')[
+            'got_link']
+            )
+
     summary_path = bot_run_summary(user_id, yt_link=link)
+
     doc_file = FSInputFile(summary_path)
     caption = replies.answers(message.from_user.id, 'general')[
         'document_caption']
@@ -58,7 +70,7 @@ async def link_handler(message: Message) -> None:
 def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
     if video_path is not None:
         run_mode = 'video'
-    if video_path is not None:
+    if yt_link is not None:
         run_mode = 'youtube'
     else:
         raise ValueError('Video path and yt link are not provided')
@@ -71,7 +83,8 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
     if run_mode == 'video':
         text = get_text_local(video_path, audio_model, temp_name)
     elif run_mode == 'youtube':
-        text, title = get_text_youtube(yt_link, audio_model, temp_name=temp_name)
+        text, title = get_text_youtube(
+            yt_link, audio_model, temp_name=temp_name)
     else:
         raise ValueError('Video path and yt link are not provided')
 
@@ -95,13 +108,15 @@ def bot_run_summary(user_id, video_path=None, yt_link=None, title='Title'):
 
 
 def get_temp_name(prefix=''):
-    curr_time = time.struct_time({'tm_sec': time.time()})
-    template_str = f"{prefix}-temp-%B-%d-%H-%M-%S"
-    return time.strftime(template_str, curr_time)
+    curr_d = datetime.now()
+    curr_t = curr_d.strftime("-temp-%B-%d-%H-%M-%S")
+    if prefix:
+        prefix = prefix + '_'
+    return prefix + curr_t
+
 
 @router.error(ExceptionTypeFilter(IndexError), F.update.message.as_("message"))
 async def link_not_found(event: ErrorEvent, message: Message):
     id = message.from_user.id
     invalid_link_msg = replies.answers(id, 'errors')['link_error']
     await message.answer(invalid_link_msg)
-
