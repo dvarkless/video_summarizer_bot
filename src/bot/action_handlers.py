@@ -110,9 +110,16 @@ def bot_run_summary(user_id, video_path=None,
 
     temp_name = get_temp_name('audio')
     summary_path = f'./temp/{temp_name}.mp4'
-    run_summary(title, txt_path, text_model, document_format,
-                text_format, answer_language=document_language,
-                temp_name=get_temp_name('file'))
+    run_summary(
+        title,
+        txt_path,
+        text_model,
+        document_format,
+        text_format,
+        answer_language=document_language,
+        temp_name=get_temp_name('file'),
+        yt_link=yt_link,
+    )
 
     Path(txt_path).unlink(missing_ok=True)
     return summary_path
