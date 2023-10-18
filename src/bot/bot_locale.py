@@ -67,14 +67,15 @@ class BotReply(metaclass=Singleton):
     def translate_button(self, user_id, scope, btn_text) -> str:
         lang = self._get_user_lang(user_id)
         my_key = None
-        for key, val in self.replicas[lang][scope]:
+        for key, val in self.replicas[lang][scope].items():
             if val == btn_text:
                 my_key = key
                 break
         if my_key is None:
             raise KeyError(
                 f'Could not find button text "{btn_text}" in [{scope}]({lang})')
-        btn_value = self.replicas[lang][scope].get(my_key + "_value", None)
+        pos = my_key[6:]
+        btn_value = self.replicas[lang][scope].get(f"value{pos}", None)
         msg = f"Could not find translation for '{btn_text}' in [{scope}]({lang})"
         # Notify if None
         return btn_value or btn_text  # Returns original, if cannot find the translation

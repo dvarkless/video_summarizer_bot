@@ -27,9 +27,12 @@ class Composer:
         self.doc = doc
 
     def prepare_dict(self, input_dict: dict, keys: set) -> dict:
+        to_del = []
         for key in input_dict.keys():
             if not (key in keys):
-                del input_dict[key]
+                to_del.append(key)
+        for key in to_del:
+            del input_dict[key]
         missing_keys = set(input_dict.keys()).symmetric_difference(keys)
 
         if missing_keys:
