@@ -118,6 +118,8 @@ def run_summary(
     except Exception as ex:
         raise ComposerError('Error while composing document') from ex
 
+    return out_path
+
 
 def get_text_youtube(link, model_name, temp_name='temp'):
     models_config = Config('./configs/models_audio.yaml')

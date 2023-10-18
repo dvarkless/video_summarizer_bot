@@ -26,7 +26,7 @@ async def start_bot(message: Message) -> None:
     with database as db:
         db.update_settings(user_id, {"change_language": user_lang})
     await message.answer(
-        replies.message(message.from_user.id, 'welcome'),
+        replies.message(message.from_user.id, 'start'),
     )
 
 

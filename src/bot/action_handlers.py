@@ -108,16 +108,15 @@ def bot_run_summary(user_id, video_path=None,
     text_format = settings.get('text_format', defaults['text_format'])
     text_format = f"{text_format}_{run_mode}"
 
-    temp_name = get_temp_name('audio')
-    summary_path = f'./temp/{temp_name}.mp4'
-    run_summary(
+    temp_name = get_temp_name('file')
+    summary_path = run_summary(
         title,
         txt_path,
         text_model,
         document_format,
         text_format,
         answer_language=document_language,
-        temp_name=get_temp_name('file'),
+        temp_name=temp_name,
         yt_link=yt_link,
     )
 
