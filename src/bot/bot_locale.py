@@ -34,7 +34,8 @@ class BotReply(metaclass=Singleton):
                 user_id).get('change_language',
                              self.default_language)
             if user_lang not in self.replicas:
-                raise ValueError(f'The provided language "{user_lang}" does not exist')
+                raise ValueError(
+                    f'The provided language "{user_lang}" does not exist')
         self.user_lang[user_id] = user_lang
         return user_lang
 
@@ -62,6 +63,21 @@ class BotReply(metaclass=Singleton):
 
     def description(self, user_id, scope) -> str:
         return self._get_position(user_id, scope, 'description')
+
+    def translate_button(self, user_id, scope, btn_text) -> str:
+        lang = self._get_user_lang(user_id)
+        my_key = None
+        for key, val in self.replicas[lang][scope]:
+            if val == btn_text:
+                my_key = key
+                break
+        if my_key is None:
+            raise KeyError(
+                f'Could not find button text "{btn_text}" in [{scope}]({lang})')
+        btn_value = self.replicas[lang][scope].get(my_key + "_value", None)
+        msg = f"Could not find translation for '{btn_text}' in [{scope}]({lang})"
+        # Notify if None
+        return btn_value or btn_text  # Returns original, if cannot find the translation
 
     def buttons(self,
                 lang: None | str = None,

@@ -89,7 +89,12 @@ def get_handlers(command: str, state_obj: State):
         assert message.from_user.id is not None
 
         with database as db:
-            data = {command: message.text}
+            answer_value = replies.translate_button(
+                message.from_user.id,
+                command,
+                message.text,
+            )
+            data = {command: answer_value}
             db.update_settings(message.from_user.id, data)
         out = replies.message(
             message.from_user.id, command) + '<b>' + message.text + '</b>'

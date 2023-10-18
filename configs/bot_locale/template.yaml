@@ -41,7 +41,9 @@ text_format:
     "Text structure is"
   description: Defines text structure
   button1: "full"
+  button1_value: "full"
   button2: "dry"
+  button2_value: "dry"
 
 general:
   success: Success!
