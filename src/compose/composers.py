@@ -23,19 +23,24 @@ class Composer:
         'link',
     ))
 
-    def __init__(self, doc: Document) -> None:
+    def __init__(self, doc: Document, return_text=False) -> None:
         self.doc = doc
 
-    def assert_dict(self, input_dict: dict, keys: set):
-        inval_keys = set(input_dict.keys()).symmetric_difference(keys)
+    def prepare_dict(self, input_dict: dict, keys: set) -> dict:
+        for key in input_dict.keys():
+            if not (key in keys):
+                del input_dict[key]
+        missing_keys = set(input_dict.keys()).symmetric_difference(keys)
 
-        if inval_keys:
-            raise ValueError(f"Unknown of missing keys: '{inval_keys}'")
+        if missing_keys:
+            raise ValueError(f"Unknown of missing keys: '{missing_keys}'")
+        return input_dict
 
     def speech_youtube(self, input_dict: dict):
         keys = self.__dry_keys | self.__with_titles
         keys |= self.__citate_keys | self.__description_keys | self.__youtube_keys
-        self.assert_dict(input_dict, keys)
+
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.plain(input_dict['description'])
@@ -59,7 +64,7 @@ class Composer:
     def speech_video(self, input_dict: dict):
         keys = self.__dry_keys | self.__with_titles
         keys |= self.__citate_keys | self.__description_keys | self.__youtube_keys
-        self.assert_dict(input_dict, keys)
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.plain(input_dict['description'])
@@ -81,7 +86,7 @@ class Composer:
 
     def facts_youtube(self, input_dict: dict):
         keys = self.__dry_keys | self.__with_titles | self.__description_keys | self.__youtube_keys
-        self.assert_dict(input_dict, keys)
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.plain(input_dict['description'])
@@ -102,7 +107,7 @@ class Composer:
 
     def facts_video(self, input_dict: dict):
         keys = self.__dry_keys | self.__with_titles | self.__description_keys
-        self.assert_dict(input_dict, keys)
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.plain(input_dict['description'])
@@ -122,7 +127,7 @@ class Composer:
 
     def dry_youtube(self, input_dict: dict):
         keys = self.__dry_keys | self.__youtube_keys
-        self.assert_dict(input_dict, keys)
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.embedding(input_dict['link'])
@@ -137,7 +142,7 @@ class Composer:
 
     def dry_video(self, input_dict: dict):
         keys = self.__dry_keys
-        self.assert_dict(input_dict, keys)
+        input_dict = self.prepare_dict(input_dict, keys)
 
         self.doc.h1(input_dict['title'])
         self.doc.sep()
