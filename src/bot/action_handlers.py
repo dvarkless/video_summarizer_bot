@@ -4,7 +4,6 @@ from pathlib import Path
 from traceback import format_exception
 
 from aiogram import Bot, F, Router
-from aiogram.filters import command
 from aiogram.filters.exception import ExceptionTypeFilter
 from aiogram.types import ErrorEvent, FSInputFile, Message
 
@@ -12,6 +11,8 @@ from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
                                 ConfigAccessError, LinkError, LLMError)
+import imageio_ffmpeg
+import subprocess
 from src.config import Config
 from src.database import Database
 
@@ -23,11 +24,14 @@ defaults = Config('./configs/defaults.yaml')
 
 @router.message(F.video)
 async def video_handler(message: Message, bot: Bot) -> None:
-    file_path = f'./tmp/{message.video.file_id}.mp4'
     file_name = message.video.file_name
+    if file_name is None:
+        raise ValueError('Could not find file name')
+    file_path = Path(f'./temp') / file_name
+
     user_id = message.from_user.id
     await bot.download(
-        message.video,
+        file=message.video.file_id,
         destination=file_path
     )
 
@@ -35,9 +39,12 @@ async def video_handler(message: Message, bot: Bot) -> None:
         replies.answers(message.from_user.id, 'general')[
             'got_video']
     )
+    audio_path = f"./temp/{get_temp_name('audio')}.mp3"
+    extract_audio(input_path=str(file_path), out_path=audio_path)
+    file_path.unlink(missing_ok=True)
 
     summary_path = bot_run_summary(
-        user_id, video_path=file_path, title=file_name)
+        user_id, audio_path=audio_path, title=message.video.file_name)
 
     doc_file = FSInputFile(summary_path)
     caption = replies.answers(message.from_user.id, 'general')[
@@ -73,13 +80,13 @@ async def link_handler(message: Message) -> None:
     )
 
 
-def bot_run_summary(user_id, video_path=None,
+def bot_run_summary(user_id, audio_path=None,
                     yt_link=None, title='Title',
                     context: Message | None = None
-                    ) -> str:
-    if video_path is not None:
+                    ) -> Path:
+    if audio_path is not None:
         run_mode = 'video'
-    if yt_link is not None:
+    elif yt_link is not None:
         run_mode = 'youtube'
     else:
         raise ValueError('Video path and yt link are not provided')
@@ -89,7 +96,7 @@ def bot_run_summary(user_id, video_path=None,
     audio_model = settings.get('audio_model', defaults['audio_model'])
     temp_name = get_temp_name('audio')
     if run_mode == 'video':
-        text = get_text_local(video_path, audio_model, temp_name)
+        text = get_text_local(audio_path, audio_model, temp_name)
     elif run_mode == 'youtube':
         text, title = get_text_youtube(
             yt_link, audio_model, temp_name=temp_name)
@@ -122,6 +129,20 @@ def bot_run_summary(user_id, video_path=None,
 
     Path(txt_path).unlink(missing_ok=True)
     return summary_path
+
+
+def extract_audio(input_path, out_path):
+    FFMPEG_BINARY = imageio_ffmpeg.get_ffmpeg_exe()
+
+    command = [FFMPEG_BINARY,
+               '-i', input_path,
+               '-ss', '00:00:00',
+               '-f', 'mp3',
+               '-y', out_path]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        err_msg = result.stderr.decode().strip().split("\n")[-1]
+        raise AudioModelError(f"Cannot extract audio, reason: {err_msg}")
 
 
 def get_temp_name(prefix=''):
@@ -189,7 +210,8 @@ async def error_handler(event: ErrorEvent, message: Message, error_msg: str):
         exc_type = type(event.exception)
         exc_val = event.exception
         tb = event.exception.__traceback__
-        tb_message = ''.join(format_exception(exc_type, exc_val, tb, limit=5))
+        tb_message = ''.join(format_exception(
+            exc_type, exc_val, tb, limit=-10))
         admin_answer = f"\nTraceback:\n```python\n{tb_message}\n```"
     else:
         admin_answer = ''
