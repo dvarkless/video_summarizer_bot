@@ -1,8 +1,14 @@
-from bson import ObjectId
-from src.singleton import Singleton
-from src.config import Config
-from pymongo import MongoClient
+import logging
 from functools import wraps
+
+from pymongo import MongoClient
+
+from src.config import Config
+from src.setup_handler import get_handler
+from src.singleton import Singleton
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 def has_db(func):
@@ -11,7 +17,9 @@ def has_db(func):
         if hasattr(args[0], 'db'):
             return func(*args, **kwargs)
         else:
-            raise AttributeError('Enter context manager first, Database.db does not exist')
+            msg = 'Enter context manager first, Database.db does not exist'
+            logger.error(msg)
+            raise AttributeError(msg)
     return inner
 
 
@@ -69,12 +77,16 @@ class Database(metaclass=Singleton):
 
     @has_db
     def update_telegram(self, user_id, data, _i=1):
+        logger.info('Call: Database.update_telegram')
+
         id_dict = {'user_id': user_id}
         data |= id_dict
         my_data = self.db[self.telegram_name].find_one({'user_id': user_id})
         if my_data is None:
             if _i > 5:
-                raise ValueError('Invalid document initiation for "telegram"')
+                msg = 'Invalid document initiation for "telegram"'
+                logger.error(msg)
+                raise ValueError(msg)
             self.init_db_telegram(user_id)
             self.update_telegram(user_id, data, _i=_i+1)
             return
@@ -84,12 +96,16 @@ class Database(metaclass=Singleton):
 
     @has_db
     def update_settings(self, user_id, data, _i=1):
+        logger.info('Call: Database.update_settings')
+
         id_dict = {'user_id': user_id}
         data |= id_dict
         my_data = self.db[self.settings_name].find_one({'user_id': user_id})
         if my_data is None:
             if _i > 5:
-                raise ValueError('Invalid document initiation for "settings"')
+                msg = 'Invalid document initiation for "settings"'
+                logger.error(msg)
+                raise ValueError(msg)
             self.init_db_settings(user_id)
             self.update_settings(user_id, data, _i=_i+1)
             return
@@ -99,12 +115,16 @@ class Database(metaclass=Singleton):
 
     @has_db
     def update_tokens(self, user_id, data, _i=1):
+        logger.info('Call: Database.update_tokens')
+
         id_dict = {'user_id': user_id}
         data |= id_dict
         my_data = self.db[self.tokens_name].find_one({'user_id': user_id})
         if my_data is None:
             if _i > 5:
-                raise ValueError('Invalid document initiation for "tokens"')
+                msg = 'Invalid document initiation for "telegram"'
+                logger.error(msg)
+                raise ValueError(msg)
             self.init_db_settings(user_id)
             self.update_tokens(user_id, data, _i=_i+1)
             return
@@ -114,15 +134,21 @@ class Database(metaclass=Singleton):
 
     @has_db
     def init_db_telegram(self, user_id):
+        logger.info('Call: Database.init_db_telegram')
+
         user_defaults = self.telegram_default.data | {'user_id': user_id}
         self.db[self.telegram_name].insert_one(user_defaults)
 
     @has_db
     def init_db_settings(self, user_id):
+        logger.info('Call: Database.init_db_settings')
+
         user_defaults = self.settings_default.data | {'user_id': user_id}
         self.db[self.settings_name].insert_one(user_defaults)
 
     @has_db
     def init_db_tokens(self, user_id):
+        logger.info('Call: Database.init_db_tokens')
+
         user_defaults = self.tokens_default.data | {'user_id': user_id}
         self.db[self.tokens_name].insert_one(user_defaults)

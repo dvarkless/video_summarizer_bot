@@ -7,7 +7,6 @@ import yaml
 from src.setup_handler import get_handler
 
 logger = logging.getLogger(__name__)
-
 logger.addHandler(get_handler())
 
 
@@ -29,7 +28,9 @@ def fix_relative_path(rel_path):
     if curr_root is not None:
         return curr_root / rel_path
     else:
-        raise FileNotFoundError(f"Could not find file '{rel_path}'")
+        msg = f"Could not find file '{rel_path}'"
+        logger.error(msg)
+        raise FileNotFoundError(msg)
 
 
 class Config:
@@ -48,8 +49,9 @@ class Config:
         with open(self.path, 'r') as f:
             items = yaml.safe_load(f)
         if not items:
-            raise FileNotFoundError(f'The requested config file \
-                                    "{self.path}" is empty')
+            msg = f'The requested config file "{self.path}" is empty'
+            logger.error(msg)
+            raise FileNotFoundError(msg)
         self.data = items.copy()
         self._fix_paths(self.data)
 
