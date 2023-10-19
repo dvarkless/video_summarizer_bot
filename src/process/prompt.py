@@ -1,3 +1,4 @@
+import logging
 import string
 from itertools import zip_longest
 from pathlib import Path
@@ -6,6 +7,10 @@ from typing import List
 from langchain.prompts import PromptTemplate
 
 from src.config import fix_relative_path
+from src.setup_handler import get_handler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 # This allows to leave some figure brackets in a string unformatted
@@ -33,7 +38,9 @@ def get_prompt(
         prompt_name: str | List | None = None,
         constant_dict=None
 ) -> dict:
+    logger.info('Call: get_prompt')
     if file_name is None or file_name == 'None':
+        logger.info('returning empty dict')
         return {}
     to_return = {}
 
@@ -52,8 +59,9 @@ def get_prompt(
         if not single_file.exists():
             single_file = fix_relative_path(single_file)
         if not single_file.exists():
-            raise FileNotFoundError(
-                f'Something wrong with file name "{single_file} in get_prompt"')
+            msg = f'Something wrong with file name "{single_file} in get_prompt"'
+            logger.error(msg)
+            raise FileNotFoundError(msg)
         with open(single_file, 'r') as f:
             text = f.read()
 

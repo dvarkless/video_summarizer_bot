@@ -9,6 +9,12 @@ from langchain.text_splitter import (CharacterTextSplitter,
                                      RecursiveCharacterTextSplitter)
 from sklearn.cluster import KMeans
 
+import logging
+from src.setup_handler import get_handler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
+
 
 class MapReduceSplitter:
     compression_power = 0.7
@@ -78,6 +84,7 @@ class MapReduceSplitter:
         self._embeddings = val
 
     def load_docs(self, doc_path):
+        logger.info('Call: MapReduceSplitter.load_docs')
         doc_path = Path(doc_path)
         with open(doc_path, 'r') as f:
             text = f.read()
@@ -85,10 +92,13 @@ class MapReduceSplitter:
         return documents
 
     def compress_docs(self, documents):
+        logger.info('Call: MapReduceSplitter.compress_docs')
+
         doc_len = len(documents)
         if (doc_len <= self.n_docs_theshold):
             return documents
 
+        logger.info('Compressing docs')
         with self._embeddings_provider as self.embeddings:
             vectors = self.embeddings.embed_documents(
                 [x.page_content for x in documents])
@@ -103,6 +113,8 @@ class MapReduceSplitter:
 
     def _closest_docs(self, vectors, num_clusters):
         """Chooses the most precise clusters of info"""
+        logger.info('Call: MapReduceSplitter._closest_docs')
+
         kmeans = KMeans(n_clusters=num_clusters).fit(vectors)
         closest_indices = []
 
@@ -116,6 +128,8 @@ class MapReduceSplitter:
         return sorted(closest_indices)
 
     def get_main_chain(self):
+        logger.info('Call: MapReduceSplitter.get_main_chain')
+
         map_chain = LLMChain(
             llm=self.llm,
             prompt=self.map_prompt,
@@ -143,6 +157,8 @@ class MapReduceSplitter:
         return map_reduce_chain
 
     def iterate_chains(self, docs, prompts):
+        logger.info('Call: MapReduceSplitter.iterate_chains')
+
         out = {}
         for name, prompt in prompts.items():
             out[name] = []
@@ -156,6 +172,8 @@ class MapReduceSplitter:
 
     # It could be used on reduce output, but it could also be a chapter
     def fix_titles(self, titles: list[str]):
+        logger.info('Call: MapReduceSplitter.fix_titles')
+
         fixed_titles = []
         for title in titles:
             title = title.split(':\n')[-1]
@@ -164,6 +182,8 @@ class MapReduceSplitter:
         return fixed_titles
 
     def fix_chapters(self, chapters: list[str]):
+        logger.info('Call: MapReduceSplitter.fix_chapters')
+
         fixed_chapters = []
         for chapter in chapters:
             chapter = chapter.split(':\n')[-1]
@@ -171,6 +191,7 @@ class MapReduceSplitter:
         return fixed_chapters
 
     def run(self, doc_path, doc_name=None):
+        logger.info('Call: MapReduceSplitter.run')
         out_dict = {}
 
         documents = self.load_docs(doc_path)

@@ -1,6 +1,12 @@
+import logging
 from pathlib import Path
 
 from pytubefix import YouTube
+
+from src.setup_handler import get_handler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 class Transcribe:
@@ -15,6 +21,8 @@ class Transcribe:
             language=None,
             **to_whisper_transcribe
     ) -> str:
+        logger.info('Call: Transcribe.transcribe_file')
+
         self.elapsed_time = 0.0
         try:
             with self._model_provider as model:
@@ -35,6 +43,8 @@ class Transcribe:
             language=None,
             **to_whisper_transcribe
     ) -> list[str]:
+        logger.info('Call: Transcribe.transcribe_multiple')
+
         self.elapsed_time = 0.0
         results = []
         try:
@@ -79,6 +89,8 @@ class TranscribeYoutube(Transcribe):
             language=None,
             **to_whisper_transcribe
     ) -> str:
+        logger.info('Call: TranscribeYoutube.transcribe_youtube')
+
         audio_file_path = self.get_audio()
         result = self.transcribe_file(
             file=audio_file_path, language=language, **to_whisper_transcribe)
@@ -88,9 +100,12 @@ class TranscribeYoutube(Transcribe):
         if self.yt is not None:
             return self.yt.title
         else:
-            raise AttributeError("Call self.load_link first")
+            msg = "Call self.load_link first"
+            logger.error(msg)
+            raise AttributeError(msg)
 
     def get_audio(self):
+        logger.info('Call: TranscribeYoutube.get_audio')
         if self.yt is not None:
             return self.yt.streams.get_audio_only().download(
                 filename=str(self.temp_dir))

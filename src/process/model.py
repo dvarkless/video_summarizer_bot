@@ -1,3 +1,4 @@
+import logging
 import time
 from pathlib import Path
 from typing import Tuple, Union
@@ -7,6 +8,11 @@ from faster_whisper import WhisperModel
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
 from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
+
+from src.setup_handler import get_handler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 class WhisperInference:
@@ -32,6 +38,8 @@ class WhisperInference:
                    language=None,
                    **to_whisper_transcribe,
                    ):
+        logger.info('Call: WhisperInference.transcribe')
+
         start_time = time.time()
 
         result = self.model.transcribe(audio=audio,
@@ -79,8 +87,10 @@ class ConfigureModel:
         model_class_name = self._config[self._model_name]['provider']
         model_kwargs = self._config[self._model_name]['model_params']
         model_class = self.model_names[model_class_name]
+        logger.info(f'Configuring {model_class_name}')
         return model_class(**model_kwargs)
 
     def get_model(self):
+        logger.info('Call: ConfigureModel.get_model')
         self.model = self._configure_model()
         return self.model
