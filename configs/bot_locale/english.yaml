@@ -1,1 +1,54 @@
- 
+language: English
+code: en
+start: 
+  message: |
+    welcome message
+  description: Start bot
+
+cancel:
+  message: canceled
+  description: Cancel current task
+
+help:
+  message: |
+    help message
+    sample text
+  description: Displays help message
+
+change_language: 
+  message: |
+    change bots language
+  description: Change bot's interface language
+  button1: "English"
+  button2: "русский"
+
+document_format:
+  message: |
+    Change document output format
+  description: Change output document format
+  button1: "pdf"
+  button2: "markdown"
+
+document_language:
+  message: |
+    Receive answer in
+  description: Change document's language
+  button1: "auto"
+  button2: "English"
+  button3: "русский"
+
+text_format:
+  message: |
+    Text structure
+  description: Defines text structure
+  button1: "full"
+  button2: "short"
+
+general:
+  success: Success!
+  document_caption: Here is your summary!
+
+errors:
+  critical: "Critical Error"
+  link_error: "Bad link"
+  unknown_setting: "You chose a wrong setting, use keyboard next time or check configs"
