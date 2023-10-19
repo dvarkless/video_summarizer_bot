@@ -1,4 +1,10 @@
+import logging
+
 from src.compose.abs import Document
+from src.setup_handler import get_handler
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 class Composer:
@@ -36,10 +42,14 @@ class Composer:
         missing_keys = set(input_dict.keys()).symmetric_difference(keys)
 
         if missing_keys:
-            raise ValueError(f"Unknown of missing keys: '{missing_keys}'")
+            msg = f"Unknown of missing keys: '{missing_keys}'"
+            logger.error(msg)
+            raise ValueError(msg)
         return input_dict
 
     def speech_youtube(self, input_dict: dict):
+        logger.info('Call: speech_youtube')
+
         keys = self.__dry_keys | self.__with_titles
         keys |= self.__citate_keys | self.__description_keys | self.__youtube_keys
 
@@ -65,6 +75,8 @@ class Composer:
         self.doc.write_file()
 
     def speech_video(self, input_dict: dict):
+        logger.info('Call: speech_video')
+
         keys = self.__dry_keys | self.__with_titles
         keys |= self.__citate_keys | self.__description_keys | self.__youtube_keys
         input_dict = self.prepare_dict(input_dict, keys)
@@ -88,6 +100,8 @@ class Composer:
         self.doc.write_file()
 
     def facts_youtube(self, input_dict: dict):
+        logger.info('Call: facts_youtube')
+
         keys = self.__dry_keys | self.__with_titles | self.__description_keys | self.__youtube_keys
         input_dict = self.prepare_dict(input_dict, keys)
 
@@ -109,6 +123,8 @@ class Composer:
         self.doc.write_file()
 
     def facts_video(self, input_dict: dict):
+        logger.info('Call: facts_video')
+
         keys = self.__dry_keys | self.__with_titles | self.__description_keys
         input_dict = self.prepare_dict(input_dict, keys)
 
@@ -129,6 +145,8 @@ class Composer:
         self.doc.write_file()
 
     def dry_youtube(self, input_dict: dict):
+        logger.info('Call: dry_youtube')
+
         keys = self.__dry_keys | self.__youtube_keys
         input_dict = self.prepare_dict(input_dict, keys)
 
@@ -144,6 +162,8 @@ class Composer:
         self.doc.write_file()
 
     def dry_video(self, input_dict: dict):
+        logger.info('Call: dry_video')
+
         keys = self.__dry_keys
         input_dict = self.prepare_dict(input_dict, keys)
 
