@@ -1,8 +1,13 @@
+import logging
 from pathlib import Path
 
 from src.config import Config
 from src.database import Database
+from src.setup_handler import get_handler
 from src.singleton import Singleton
+
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
 
 
 class BotReply(metaclass=Singleton):
@@ -34,16 +39,18 @@ class BotReply(metaclass=Singleton):
                 user_id).get('change_language',
                              self.default_language)
             if user_lang not in self.replicas:
-                raise ValueError(
-                    f'The provided language "{user_lang}" does not exist')
+                msg = f'The provided language "{user_lang}" does not exist'
+                logger.error(msg)
+                raise ValueError(msg)
         self.user_lang[user_id] = user_lang
         return user_lang
 
     def _get_position(self, user_id, scope, message=None):
         user_lang = self._get_user_lang(user_id)
         if (isinstance(self.replicas[user_lang][scope], str) and message is not None):
-            raise KeyError(
-                f'Accessing str "{self.replicas[user_lang][scope]}" as dict')
+            msg = f'Accessing str "{self.replicas[user_lang][scope]}" as dict'
+            logger.error(msg)
+            raise KeyError(msg)
         elif message is not None:
             return self.replicas[user_lang][scope][message]
         else:
@@ -72,12 +79,15 @@ class BotReply(metaclass=Singleton):
                 my_key = key
                 break
         if my_key is None:
-            raise KeyError(
-                f'Could not find button text "{btn_text}" in [{scope}]({lang})')
+            msg = f'Could not find button text "{btn_text}" in [{scope}]({lang})'
+            logger.error(msg)
+            raise KeyError(msg)
         pos = my_key[6:]
         btn_value = self.replicas[lang][scope].get(f"value{pos}", None)
         msg = f"Could not find translation for '{btn_text}' in [{scope}]({lang})"
-        # Notify if None
+        logger.warning(msg)
+        logger.warning(
+            'Consider adding button values in the English translations')
         return btn_value or btn_text  # Returns original, if cannot find the translation
 
     def buttons(self,
@@ -106,6 +116,7 @@ class BotReply(metaclass=Singleton):
                         if 'button' in key:
                             to_return.append(val)
         if not to_return:
-            raise KeyError(
-                f'Could not find buttons for the provided arguments: "lang={lang}, scope={scope}"')
+            msg = f'Could not find buttons for the provided arguments: "lang={lang}, scope={scope}"'
+            logger.error(msg)
+            raise KeyError(msg)
         return to_return

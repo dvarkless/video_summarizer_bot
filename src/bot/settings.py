@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -7,14 +9,19 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from src.bot.bot_locale import BotReply
 from src.bot.keyboard import keyboard
 from src.database import Database
+from src.setup_handler import get_handler
 
 router = Router()
 replies = BotReply()
 database = Database()
 
+logger = logging.getLogger(__name__)
+logger.addHandler(get_handler())
+
 
 @router.message(CommandStart())
 async def start_bot(message: Message) -> None:
+    logger.info('Call: start_bot')
     user_lang_code = message.from_user.language_code
     user_id = message.from_user.id
     user_lang = None
@@ -23,6 +30,9 @@ async def start_bot(message: Message) -> None:
             user_lang = key
     if user_lang is None:
         user_lang = "English"
+        logger.warning(
+            f'Cannot find users[{message.from_user.username}] language, setting {user_lang}')
+
     with database as db:
         db.update_settings(user_id, {"change_language": user_lang})
     await message.answer(
@@ -32,6 +42,7 @@ async def start_bot(message: Message) -> None:
 
 @router.message(Command('help'))
 async def help_handler(message: Message) -> None:
+    logger.info('Call: help_handler')
     await message.answer(
         replies.message(message.from_user.id, 'help'),
     )
@@ -42,6 +53,7 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     """
     Allow user to cancel any action
     """
+    logger.info('Call: cancel_handler')
     current_state = await state.get_state()
     if current_state is not None:
         await state.clear()
@@ -54,6 +66,7 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
 
 def get_handlers(command: str, state_obj: State):
     # Create command handler
+    logger.info(f'Creating: command-handler-{command}')
     assert command in replies
 
     @router.message(Command(command))
@@ -70,12 +83,15 @@ def get_handlers(command: str, state_obj: State):
 
     # Create answer handler
     # Check if the configs have the necessary keys
+    logger.info(f'Creating: answer-handler-{command}')
     assert command in replies
     try:
         replies_dict = replies.get_for_language(
             replies.default_language, command)
-    except KeyError:
-        raise KeyError(f'Error in language name "{replies.default_language}"')
+    except KeyError as ex:
+        msg = f'Error in language name "{replies.default_language}"'
+        logger.error(msg)
+        raise KeyError(msg) from ex
     assert 'message' in replies_dict
     assert 'description' in replies_dict
     assert 'button1' in replies_dict
@@ -105,6 +121,8 @@ def get_handlers(command: str, state_obj: State):
             reply_markup=ReplyKeyboardRemove(),
             parse_mode='HTML'
         )
+
+    logger.info(f'Creating: wrong-handler-{command}')
 
     @router.message(
         state_obj,
