@@ -1,5 +1,6 @@
 langchain[llms]
 aiogram
+apscheduler
 imageio-ffmpeg
 pyyaml
 uuid
