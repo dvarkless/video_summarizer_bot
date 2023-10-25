@@ -9,7 +9,7 @@ elif [[ $MONGO_ADDR != *"mongodb://localhost"* ]]; then
 else
     MONGO_LOCAL=false
 fi
-echo $MONGO_LOCAL
+
 if [[ $MONGO_LOCAL==true ]]; then
     MONGO_ACTIVE=$(systemctl is-active mongodb.service)
     if [[ $MONGO_ACTIVE  != "active" ]]; then
