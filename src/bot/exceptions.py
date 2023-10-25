@@ -16,3 +16,7 @@ class ComposerError(Exception):
 
 class AudioModelError(Exception):
     pass
+
+
+class TooManyTasksError(Exception):
+    pass
