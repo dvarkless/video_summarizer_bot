@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Check if MongoDB is local or remote by checking config file
 MONGO_ADDR=$(cat ./configs/secrets.yaml | grep "mongodb_url:")
 if [[ $MONGO_ADDR != *"mongodb://127.0.0.1"* ]]; then
     MONGO_LOCAL=true
@@ -17,7 +18,9 @@ if [[ $MONGO_LOCAL==true ]]; then
     fi
 fi
 
+
 source venv/bin/activate
+# Find cudnn and cublas for faster-whisper
 export LD_LIBRARY_PATH=`python3 -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__file__) + ":" + os.path.dirname(nvidia.cudnn.lib.__file__))'`
 export PYTHONPATH=$(pwd)
 export TELEGRAM_SUMMARY_BOT_CONFIG_ROOT=$(pwd)
