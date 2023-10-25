@@ -1,0 +1,4 @@
+text_model: 'synthia'
+audio_model: 'whisper_local'
+
+max_tasks: 5
