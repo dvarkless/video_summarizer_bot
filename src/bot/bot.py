@@ -2,9 +2,11 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher, types
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pymongo import database
 
 from src.bot.action_handlers import router as action_router
+from src.bot.action_handlers import user_tasks
 from src.bot.admin_info import router as admin_actions_router
 from src.bot.bot_locale import BotReply
 from src.bot.settings import router as settings_router
@@ -35,6 +37,12 @@ async def set_default_commands(bot: Bot, language='English'):
     await bot.set_my_commands(bot_commands, language_code=code)
 
 
+async def check_tasks():
+    for user_id, task in user_tasks.items():
+        if task.done():
+            await task
+
+
 async def main() -> None:
     TOKEN = Config(SECRETS_PATH)['telegram_token']
     try:
@@ -47,16 +55,23 @@ async def main() -> None:
         with database as db:
             db.update_telegram(admin_id, {'is_admin': True})
 
-    # All handlers should be attached to the Router (or Dispatcher)
     bot = Bot(token=TOKEN, parse_mode="MarkdownV2")
     dp = Dispatcher()
+
+    look_after_tasks = AsyncIOScheduler()
+    look_after_tasks.add_job(
+        check_tasks,
+        trigger='interval',
+        seconds=2,
+    )
+    look_after_tasks.start()
 
     await set_default_commands(bot)
     if admin_id is not None:
         dp.include_router(admin_actions_router)
     dp.include_router(settings_router)
     dp.include_router(action_router)
-    await bot.delete_webhook(drop_pending_updates=True)
+    # await bot.delete_webhook(drop_pending_updates=True)
     print("bot activated")
     logger.info("bot activated")
     await dp.start_polling(bot)

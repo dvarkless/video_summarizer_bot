@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, ReplyKeyboardRemove
 
+from src.bot.action_handlers import user_tasks
 from src.bot.bot_locale import BotReply
 from src.bot.keyboard import keyboard
 from src.database import Database
@@ -35,6 +36,7 @@ async def start_bot(message: Message) -> None:
 
     with database as db:
         db.update_settings(user_id, {"change_language": user_lang})
+
     await message.answer(
         replies.message(message.from_user.id, 'start'),
     )
@@ -54,14 +56,28 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     Allow user to cancel any action
     """
     logger.info('Call: cancel_handler')
+    user_id = message.from_user.id
+
     current_state = await state.get_state()
     if current_state is not None:
         await state.clear()
 
-    await message.answer(
-        replies.message(message.from_user.id, 'cancel'),
-        reply_markup=ReplyKeyboardRemove(),
-    )
+        await message.answer(
+            replies.message(user_id, 'cancel'),
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return
+
+    if user_id in user_tasks:
+        task = user_tasks[user_id]
+        task.cancel()
+
+        text = replies.message(user_id, 'cancel'),
+        await message.answer(text)
+        return
+
+    text = replies.answers(user_id, 'errors')['nothing_to_cancel']
+    await message.answer(text)
 
 
 def get_handlers(command: str, state_obj: State):

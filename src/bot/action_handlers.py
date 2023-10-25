@@ -1,7 +1,10 @@
+import asyncio
 import logging
 import re
 import subprocess
+from asyncio import Future
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from traceback import format_exception
 
@@ -13,7 +16,8 @@ from aiogram.types import ErrorEvent, FSInputFile, Message
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
-                                ConfigAccessError, LinkError, LLMError)
+                                ConfigAccessError, LinkError, LLMError,
+                                TooManyTasksError)
 from src.config import Config
 from src.database import Database
 from src.setup_handler import get_handler
@@ -21,15 +25,22 @@ from src.setup_handler import get_handler
 router = Router()
 replies = BotReply()
 database = Database()
-defaults = Config('./configs/defaults.yaml')
+defaults = Config('./configs/settings_defaults.yaml')
+settings = Config('./configs/bot_settings.yaml')
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
+
+user_tasks: dict[int, asyncio.Task] = {}
 
 
 @router.message(F.video)
 async def video_handler(message: Message, bot: Bot) -> None:
     logger.info('Call: video_handler')
+
+    user_id = message.from_user.id
+    if await is_generating(message):
+        return
 
     file_name = message.video.file_name
     if file_name is None:
@@ -38,7 +49,6 @@ async def video_handler(message: Message, bot: Bot) -> None:
         raise ValueError(msg)
     file_path = Path(f'./temp') / file_name
 
-    user_id = message.from_user.id
     await bot.download(
         file=message.video.file_id,
         destination=file_path
@@ -52,16 +62,17 @@ async def video_handler(message: Message, bot: Bot) -> None:
     extract_audio(input_path=str(file_path), out_path=audio_path)
     file_path.unlink(missing_ok=True)
 
-    summary_path = bot_run_summary(
-        user_id, audio_path=audio_path, title=message.video.file_name)
-
-    doc_file = FSInputFile(summary_path)
-    caption = replies.answers(message.from_user.id, 'general')[
-        'document_caption']
-    await message.answer_document(
-        doc_file,
-        caption
-    )
+    task = asyncio.create_task(summary_coro(
+        user_id, audio_path=audio_path,
+        title=message.video.file_name,
+        context=message,
+    ))
+    user_tasks[user_id] = task
+    len_t = len(user_tasks)
+    if len_t > settings['max_tasks']:
+        msg = f"Tasks: {user_tasks} of len={len_t} > {settings['max_tasks']}"
+        logger.error(msg)
+        raise TooManyTasksError(msg)
 
 
 @router.message(F.text)
@@ -69,6 +80,8 @@ async def link_handler(message: Message) -> None:
     logger.info('Call: link_handler')
 
     user_id = message.from_user.id
+    if await is_generating(message):
+        return
     get_link_regex = re.compile(r'https://www.youtube.com/watch\S+')
     try:
         link = get_link_regex.findall(message.text)[0]
@@ -82,8 +95,23 @@ async def link_handler(message: Message) -> None:
             'got_link']
     )
 
-    summary_path = bot_run_summary(user_id, yt_link=link, context=message)
+    task = asyncio.create_task(summary_coro(
+        user_id, yt_link=link, context=message
+    ))
+    task.add_done_callback(partial(return_doc, message))
+    user_tasks[user_id] = task
 
+    len_t = len(user_tasks)
+    if len_t > settings['max_tasks']:
+        del user_tasks[user_id]
+        msg = f"Tasks: {user_tasks} of len={len_t} > {settings['max_tasks']}"
+        logger.error(msg)
+        raise TooManyTasksError(msg)
+
+
+async def return_doc(message: Message, future: Future):
+    user_id = message.from_user.id
+    summary_path: str = future.result()
     doc_file = FSInputFile(summary_path)
     caption = replies.answers(message.from_user.id, 'general')[
         'document_caption']
@@ -91,12 +119,23 @@ async def link_handler(message: Message) -> None:
         doc_file,
         caption
     )
+    del user_tasks[user_id]
 
 
-def bot_run_summary(user_id, audio_path=None,
-                    yt_link=None, title='Title',
-                    context: Message | None = None
-                    ) -> Path:
+async def is_generating(message: Message):
+    user_id = message.from_user.id
+    if user_tasks.get(user_id, None) is not None:
+        text = replies.answers(user_id, 'general')['processing']
+        await message.answer(text)
+        return True
+    else:
+        return False
+
+
+async def summary_coro(user_id, audio_path=None,
+                       yt_link=None, title='Title',
+                       context: Message | None = None
+                       ) -> Path:
     logger.info('Call: bot_run_summary')
 
     if audio_path is not None:
@@ -110,7 +149,7 @@ def bot_run_summary(user_id, audio_path=None,
     with database as db:
         settings = db.get_settings(user_id)
 
-    audio_model = settings.get('audio_model', defaults['audio_model'])
+    audio_model = settings.get('audio_model', settings['audio_model'])
     temp_name = get_temp_name('audio')
     if run_mode == 'video':
         text = get_text_local(audio_path, audio_model, temp_name)
@@ -126,7 +165,7 @@ def bot_run_summary(user_id, audio_path=None,
     with open(txt_path, 'w') as f:
         f.writelines(text)
 
-    text_model = settings.get('text_model', defaults['text_model'])
+    text_model = settings.get('text_model', settings['text_model'])
     document_format = settings.get(
         'document_format', defaults['document_format'])
     document_language = settings.get(
@@ -208,6 +247,13 @@ async def composer_error(event: ErrorEvent, message: Message):
 async def audio_model_error(event: ErrorEvent, message: Message):
     id = message.from_user.id
     error_msg = replies.answers(id, 'errors')['audio_model']
+    await error_handler(event, message, error_msg)
+
+
+@router.error(ExceptionTypeFilter(TooManyTasksError), F.update.message.as_("message"))
+async def audio_model_error(event: ErrorEvent, message: Message):
+    id = message.from_user.id
+    error_msg = replies.answers(id, 'errors')['too_many_tasks']
     await error_handler(event, message, error_msg)
 
 
