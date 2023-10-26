@@ -103,6 +103,9 @@ class WhisperCloud:
                     **to_whisper_transcribe)
 
             texts.append(transcript)
+            for path in audio_paths:
+                path = Path(path)
+                path.unlink(missing_ok=True)
         return "\n".join(texts)
 
     def _get_clips(self, audio: str) -> list[str]:
