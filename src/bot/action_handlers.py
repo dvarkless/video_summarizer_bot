@@ -8,10 +8,10 @@ from functools import partial
 from pathlib import Path
 from traceback import format_exception
 
-import imageio_ffmpeg
 from aiogram import Bot, F, Router
 from aiogram.filters.exception import ExceptionTypeFilter
 from aiogram.types import ErrorEvent, FSInputFile, Message
+from pydub import AudioSegment
 
 from src.bot.actions import get_text_local, get_text_youtube, run_summary
 from src.bot.bot_locale import BotReply
@@ -58,9 +58,13 @@ async def video_handler(message: Message, bot: Bot) -> None:
         replies.answers(message.from_user.id, 'general')[
             'got_video']
     )
-    audio_path = f"./temp/{get_temp_name('audio')}.mp3"
-    extract_audio(input_path=str(file_path), out_path=audio_path)
-    file_path.unlink(missing_ok=True)
+    try:
+        audio_path = f"./temp/{get_temp_name('audio')}.mp3"
+        AudioSegment.from_file(str(file_path), file_path.suffix[1:]).export(
+            audio_path, format='mp3')
+        file_path.unlink(missing_ok=True)
+    except Exception as ex:
+        raise AudioModelError from ex
 
     task = asyncio.create_task(summary_coro(
         user_id, audio_path=audio_path,
@@ -187,24 +191,6 @@ async def summary_coro(user_id, audio_path=None,
 
     Path(txt_path).unlink(missing_ok=True)
     return summary_path
-
-
-def extract_audio(input_path, out_path):
-    logger.info('Call: extract audio')
-    FFMPEG_BINARY = imageio_ffmpeg.get_ffmpeg_exe()
-
-    command = [FFMPEG_BINARY,
-               '-i', input_path,
-               '-ss', '00:00:00',
-               '-f', 'mp3',
-               '-y', out_path]
-    result = subprocess.run(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode != 0:
-        err_msg = result.stderr.decode().strip().split("\n")[-1]
-        msg = f"Cannot extract audio, reason: {err_msg}"
-        logger.error(msg)
-        raise AudioModelError(msg)
 
 
 def get_temp_name(prefix=''):

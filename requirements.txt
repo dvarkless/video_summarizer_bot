@@ -1,10 +1,9 @@
 langchain[llms]
 aiogram
 apscheduler
-imageio-ffmpeg
 pyyaml
 uuid
-audio-extract
+pydub
 pymongo[srv]
 scikit-learn
 pytubefix
