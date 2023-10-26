@@ -7,18 +7,24 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pymongo import database
 
 from src.bot.action_handlers import router as action_router
-from src.bot.action_handlers import user_tasks
+from src.bot.actions import answer_doc, print_doc, return_doc
 from src.bot.admin_info import router as admin_actions_router
 from src.bot.bot_locale import BotReply
 from src.bot.settings import router as settings_router
 from src.config import Config
-from src.database import Database
+from src.database import Database, user_tasks
 from src.setup_handler import get_handler
 
 SECRETS_PATH = './configs/secrets.yaml'
 database = Database()
+bot_settings = Config('./configs/bot_settings.yaml')
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
+return_funcs = {
+    'print': print_doc,
+    'doc': return_doc,
+    'answer': answer_doc,
+}
 
 
 async def set_default_commands(bot: Bot, language='English'):
@@ -39,9 +45,22 @@ async def set_default_commands(bot: Bot, language='English'):
 
 
 async def check_tasks():
+    print('Call check_tasks()')
+    to_del = []
     for user_id, task in user_tasks.items():
+        print(
+            f"For user {user_id}, the task is {'Done' if task.done() else 'processing'}")
         if task.done():
             await task
+            out, message = task.result()
+            to_del.append(user_id)
+            print('Await task')
+
+            return_afunc = return_funcs[bot_settings['return_type']]
+            await return_afunc(out, message)
+    if to_del:
+        for id in to_del:
+            del user_tasks[id]
 
 
 async def main() -> None:
@@ -52,7 +71,7 @@ async def main() -> None:
         admin_id = None
 
     OPENAI_TOKEN = Config(SECRETS_PATH)['openai_token']
-    os.environ["OPENAI_API_KEY"] = OPENAI_TOKEN
+    os.environ["OPENAI_API_KEY"] = str(OPENAI_TOKEN)
 
     if admin_id is not None:
         logger.info(f"setup id={admin_id} as admin")
@@ -66,7 +85,7 @@ async def main() -> None:
     look_after_tasks.add_job(
         check_tasks,
         trigger='interval',
-        seconds=2,
+        seconds=4,
     )
     look_after_tasks.start()
 

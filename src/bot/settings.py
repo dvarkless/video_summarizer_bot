@@ -72,7 +72,7 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
         task = user_tasks[user_id]
         task.cancel()
 
-        text = replies.message(user_id, 'cancel'),
+        text = replies.message(user_id, 'cancel')
         await message.answer(text)
         return
 

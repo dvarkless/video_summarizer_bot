@@ -1,11 +1,21 @@
+import asyncio
 import logging
+from asyncio import AbstractEventLoop, Future, Task
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 
+from aiogram.enums import parse_mode
+from aiogram.types import FSInputFile, Message
+
+from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
-                                ConfigAccessError, LinkError, LLMError)
+                                ConfigAccessError, LinkError, LLMError,
+                                TooManyTasksError)
 from src.compose.composers import Composer
 from src.compose.markdown import Markdown
 from src.config import Config
+from src.database import Database, user_tasks
 from src.process.agent import MapReduceSplitter
 from src.process.file_process import Transcribe, TranscribeYoutube
 from src.process.model import ConfigureModel
@@ -14,6 +24,55 @@ from src.setup_handler import get_handler
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
+
+database = Database()
+bot_settings = Config('./configs/bot_settings.yaml')
+executor = ThreadPoolExecutor(max_workers=1)
+replies = BotReply()
+
+
+async def worker(message: Message, foo):
+    len_t = len(user_tasks)
+    if len_t > bot_settings['max_tasks']:
+        msg = f"Tasks: {user_tasks} of len={len_t} > {bot_settings['max_tasks']}"
+        logger.error(msg)
+        raise TooManyTasksError(msg)
+
+    print('Creating task')
+    loop = asyncio.get_running_loop()
+    task = asyncio.ensure_future(loop.run_in_executor(executor, foo))
+    print('Saving task')
+    user_tasks[message.from_user.id] = task
+
+
+async def return_doc(path, message: Message):
+    user_id = message.from_user.id
+    doc_file = FSInputFile(path)
+    caption = replies.answers(message.from_user.id, 'general')[
+        'document_caption']
+
+    await message.answer_document(
+        doc_file,
+        caption
+    )
+    Path(path).unlink(missing_ok=True)
+
+
+async def print_doc(path, message: Message):
+    with open(path, 'r') as f:
+        for line in f.readlines():
+            print(line)
+    Path(path).unlink(missing_ok=True)
+
+
+async def answer_doc(path, message: Message):
+    with open(path, 'r') as f:
+        text = f.read()
+    await message.answer(
+        text,
+        parse_mode='MarkdownV2',
+    )
+    Path(path).unlink(missing_ok=True)
 
 
 def run_summary(
@@ -128,20 +187,7 @@ def run_summary(
     out_path = document.path
     try:
         composer = Composer(document)
-        if text_structure == 'facts_youtube':
-            composer.facts_youtube(output_dict)
-        elif text_structure == 'facts_video':
-            composer.facts_video(output_dict)
-
-        elif text_structure == 'speech_youtube':
-            composer.speech_youtube(output_dict)
-        elif text_structure == 'speech_video':
-            composer.speech_video(output_dict)
-
-        elif text_structure == 'dry_youtube':
-            composer.dry_youtube(output_dict)
-        elif text_structure == 'dry_video':
-            composer.dry_video(output_dict)
+        getattr(composer, text_structure)(output_dict)
     except Exception as ex:
         msg = 'Error while composing document'
         logger.error(msg)

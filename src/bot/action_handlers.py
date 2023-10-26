@@ -1,8 +1,5 @@
-import asyncio
 import logging
 import re
-import subprocess
-from asyncio import Future
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -10,28 +7,36 @@ from traceback import format_exception
 
 from aiogram import Bot, F, Router
 from aiogram.filters.exception import ExceptionTypeFilter
-from aiogram.types import ErrorEvent, FSInputFile, Message
+from aiogram.types import ErrorEvent, Message
 from pydub import AudioSegment
 
-from src.bot.actions import get_text_local, get_text_youtube, run_summary
+from src.bot.actions import (get_text_local, get_text_youtube, run_summary,
+                             worker)
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
                                 ConfigAccessError, LinkError, LLMError,
                                 TooManyTasksError)
 from src.config import Config
-from src.database import Database
+from src.database import Database, user_tasks
 from src.setup_handler import get_handler
 
 router = Router()
 replies = BotReply()
 database = Database()
 defaults = Config('./configs/settings_defaults.yaml')
-settings = Config('./configs/bot_settings.yaml')
+bot_settings = Config('./configs/bot_settings.yaml')
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
 
-user_tasks: dict[int, asyncio.Task] = {}
+
+def get_temp_name(prefix=''):
+    curr_d = datetime.now()
+    curr_t = curr_d.strftime("temp-%B-%d-%H-%M-%S")
+    if prefix:
+        prefix = prefix + '-'
+    return prefix + curr_t
 
 
 @router.message(F.video)
@@ -66,17 +71,36 @@ async def video_handler(message: Message, bot: Bot) -> None:
     except Exception as ex:
         raise AudioModelError from ex
 
-    task = asyncio.create_task(summary_coro(
-        user_id, audio_path=audio_path,
-        title=message.video.file_name,
-        context=message,
-    ))
-    user_tasks[user_id] = task
-    len_t = len(user_tasks)
-    if len_t > settings['max_tasks']:
-        msg = f"Tasks: {user_tasks} of len={len_t} > {settings['max_tasks']}"
-        logger.error(msg)
-        raise TooManyTasksError(msg)
+    # Preparing data
+    with database as db:
+        settings = db.get_settings(user_id)
+
+    audio_model = bot_settings['audio_model']
+    temp_name = get_temp_name('audio')
+    text = get_text_local(audio_path, audio_model, temp_name)
+
+    txt_path = f'./temp/{get_temp_name("txt")}.txt'
+    with open(txt_path, 'w') as f:
+        f.writelines(text)
+
+    text_model = bot_settings['text_model']
+    document_format = settings['document_format']
+    document_language = settings['document_language']
+    text_format = settings['text_format'] + '_video'
+
+    temp_name = get_temp_name('file')
+    summary_func = partial(
+        run_summary,
+        file_name,
+        txt_path,
+        text_model,
+        document_format,
+        text_format,
+        answer_language=document_language,
+        temp_name=temp_name,
+    )
+    wrapper = partial(message_wrapper, summary_func, message)
+    await worker(message, wrapper)
 
 
 @router.message(F.text)
@@ -99,31 +123,42 @@ async def link_handler(message: Message) -> None:
             'got_link']
     )
 
-    task = asyncio.create_task(summary_coro(
-        user_id, yt_link=link, context=message
-    ))
-    task.add_done_callback(partial(return_doc, message))
-    user_tasks[user_id] = task
+    # Preparing data
+    with database as db:
+        settings = db.get_settings(user_id)
 
-    len_t = len(user_tasks)
-    if len_t > settings['max_tasks']:
-        del user_tasks[user_id]
-        msg = f"Tasks: {user_tasks} of len={len_t} > {settings['max_tasks']}"
-        logger.error(msg)
-        raise TooManyTasksError(msg)
+    audio_model = bot_settings['audio_model']
+    temp_name = get_temp_name('audio')
+    text, title = get_text_youtube(link, audio_model, temp_name)
 
+    txt_path = f'./temp/{get_temp_name("txt")}.txt'
+    with open(txt_path, 'w') as f:
+        f.writelines(text)
 
-async def return_doc(message: Message, future: Future):
-    user_id = message.from_user.id
-    summary_path: str = future.result()
-    doc_file = FSInputFile(summary_path)
-    caption = replies.answers(message.from_user.id, 'general')[
-        'document_caption']
-    await message.answer_document(
-        doc_file,
-        caption
+    text_model = bot_settings['text_model']
+    document_format = settings['document_format']
+    document_language = settings['document_language']
+    text_format = settings['text_format'] + '_youtube'
+
+    temp_name = get_temp_name('file')
+    summary_func = partial(
+        run_summary,
+        title,
+        txt_path,
+        text_model,
+        document_format,
+        text_format,
+        answer_language=document_language,
+        temp_name=temp_name,
+        yt_link=link,
     )
-    del user_tasks[user_id]
+    wrapper = partial(message_wrapper, summary_func, message)
+    await worker(message, wrapper)
+
+
+def message_wrapper(foo, message: Message):
+    out = foo()
+    return out, message
 
 
 async def is_generating(message: Message):
@@ -134,71 +169,6 @@ async def is_generating(message: Message):
         return True
     else:
         return False
-
-
-async def summary_coro(user_id, audio_path=None,
-                       yt_link=None, title='Title',
-                       context: Message | None = None
-                       ) -> Path:
-    logger.info('Call: bot_run_summary')
-
-    if audio_path is not None:
-        run_mode = 'video'
-    elif yt_link is not None:
-        run_mode = 'youtube'
-    else:
-        msg = 'Video path and yt link are not provided'
-        logger.error(msg)
-        raise ValueError(msg)
-    with database as db:
-        settings = db.get_settings(user_id)
-
-    audio_model = settings.get('audio_model', settings['audio_model'])
-    temp_name = get_temp_name('audio')
-    if run_mode == 'video':
-        text = get_text_local(audio_path, audio_model, temp_name)
-    elif run_mode == 'youtube':
-        text, title = get_text_youtube(
-            yt_link, audio_model, temp_name=temp_name)
-    else:
-        msg = 'Video path and yt link are not provided'
-        logger.error(msg)
-        raise ValueError(msg)
-
-    txt_path = f'./temp/{get_temp_name("txt")}.txt'
-    with open(txt_path, 'w') as f:
-        f.writelines(text)
-
-    text_model = settings.get('text_model', settings['text_model'])
-    document_format = settings.get(
-        'document_format', defaults['document_format'])
-    document_language = settings.get(
-        'document_language', defaults['document_language'])
-    text_format = settings.get('text_format', defaults['text_format'])
-    text_format = f"{text_format}_{run_mode}"
-
-    temp_name = get_temp_name('file')
-    summary_path = run_summary(
-        title,
-        txt_path,
-        text_model,
-        document_format,
-        text_format,
-        answer_language=document_language,
-        temp_name=temp_name,
-        yt_link=yt_link,
-    )
-
-    Path(txt_path).unlink(missing_ok=True)
-    return summary_path
-
-
-def get_temp_name(prefix=''):
-    curr_d = datetime.now()
-    curr_t = curr_d.strftime("temp-%B-%d-%H-%M-%S")
-    if prefix:
-        prefix = prefix + '-'
-    return prefix + curr_t
 
 
 @router.error(ExceptionTypeFilter(LinkError), F.update.message.as_("message"))

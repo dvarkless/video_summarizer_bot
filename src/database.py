@@ -1,4 +1,5 @@
 import logging
+from asyncio import Future
 from functools import wraps
 
 from pymongo import MongoClient
@@ -9,6 +10,8 @@ from src.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
+
+user_tasks: dict[int, Future] = {}
 
 
 def has_db(func):
@@ -32,7 +35,7 @@ class Database(metaclass=Singleton):
         self.tokens_name = config['tokens_collection']
         self.telegram_name = config['telegram_collection']
         self.client = MongoClient(self.url)
-        self.settings_default = Config('./configs/defaults.yaml')
+        self.settings_default = Config('./configs/settings_defaults.yaml')
         self.tokens_default = Config('./configs/token_defaults.yaml')
         self.telegram_default = Config('./configs/telegram_defaults.yaml')
 
