@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from aiogram import Bot, Dispatcher, types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -49,6 +50,9 @@ async def main() -> None:
         admin_id = Config(SECRETS_PATH)['admin_id']
     except KeyError:
         admin_id = None
+
+    OPENAI_TOKEN = Config(SECRETS_PATH)['openai_token']
+    os.environ["OPENAI_API_KEY"] = OPENAI_TOKEN
 
     if admin_id is not None:
         logger.info(f"setup id={admin_id} as admin")
