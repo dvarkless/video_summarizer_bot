@@ -6,3 +6,9 @@ whisper_local:
     is_translate: False
     device: "cuda"
 
+whisper_cloud:
+  provider: WhisperCloud
+  model_params:
+    model_name: "whisper-1"
+    model_dir: "./models/whisper/"
+    is_translate: False
