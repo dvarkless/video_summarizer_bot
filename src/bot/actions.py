@@ -162,8 +162,6 @@ def run_summary(
     document_names = {
         'markdown': Markdown,
     }
-    # Configs
-
     logger.info('run_summary: setting up configs')
     models_config = Config('./configs/models_text.yaml')
     try:
@@ -257,9 +255,10 @@ def run_summary(
     logger.info('run_summary: composing document')
     document = document_names[doc_format]('./temp', temp_name)
     out_path = document.path
+    is_youtube = bool(yt_link)
     try:
         composer = Composer(document)
-        getattr(composer, text_structure)(output_dict)
+        getattr(composer, text_structure)(output_dict, is_youtube)
     except Exception as ex:
         msg = 'Error while composing document'
         logger.error(msg)

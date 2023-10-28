@@ -1,6 +1,5 @@
 import logging
 import re
-from datetime import datetime
 from functools import partial
 from pathlib import Path
 from traceback import format_exception
@@ -9,7 +8,7 @@ from aiogram import Bot, F, Router
 from aiogram.filters.exception import ExceptionTypeFilter
 from aiogram.types import ErrorEvent, Message
 
-from src.bot.actions import run_summary, run_video, run_youtube, worker
+from src.bot.actions import run_video, run_youtube, worker
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
                                 ConfigAccessError, LinkError, LLMError,
@@ -61,7 +60,7 @@ async def video_handler(message: Message, bot: Bot) -> None:
     text_model = bot_settings['text_model']
     document_format = settings['document_format']
     document_language = settings['document_language']
-    text_format = settings['text_format'] + '_video'
+    text_format = settings['text_format']
 
     summary_func = partial(
         run_video,
@@ -104,7 +103,7 @@ async def link_handler(message: Message) -> None:
     text_model = bot_settings['text_model']
     document_format = settings['document_format']
     document_language = settings['document_language']
-    text_format = settings['text_format'] + '_youtube'
+    text_format = settings['text_format']
 
     summary_func = partial(
         run_youtube,

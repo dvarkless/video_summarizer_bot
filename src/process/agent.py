@@ -1,15 +1,13 @@
+import logging
 from pathlib import Path
 
 import numpy as np
 from langchain.chains import (LLMChain, MapReduceDocumentsChain,
                               ReduceDocumentsChain, StuffDocumentsChain)
-from langchain.chains.summarize import map_reduce_prompt
 from langchain.schema import Document
-from langchain.text_splitter import (CharacterTextSplitter,
-                                     RecursiveCharacterTextSplitter)
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sklearn.cluster import KMeans
 
-import logging
 from src.setup_handler import get_handler
 
 logger = logging.getLogger(__name__)

@@ -37,7 +37,7 @@ class Markdown(Document):
 
     def index(self, chapters: list[str], indexname='Index'):
         self.indexname = indexname
-        self.text += f"[{indexname}] " + "{#index}  \n"
+        self.text += f"[{indexname}]" + "{#index}  \n"
         for i, chapter in enumerate(chapters, 1):
             self.text += f"- [{chapter}](#title-{i})  \n"
 

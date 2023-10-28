@@ -1,4 +1,4 @@
-speech_youtube:
+speech:
   premap_name: 'citate'
   premap: "./configs/prompts/get_citate.txt"
   map: "./configs/prompts/video_summary.txt"
@@ -6,15 +6,7 @@ speech_youtube:
   postmap: "./configs/prompts/get_title.txt"
   reduce: "./configs/prompts/get_article_name.txt"
 
-speech_video:
-  premap_name: 'citate'
-  premap: "./configs/prompts/get_citate.txt"
-  map: "./configs/prompts/video_summary.txt"
-  postmap_name: 'chapter_title'
-  postmap: "./configs/prompts/get_title.txt"
-  reduce: "./configs/prompts/get_article_name.txt"
-
-dry_youtube:
+dry:
   premap: null
   premap_name: null
   map: "./configs/prompts/video_summary.txt"
@@ -22,19 +14,11 @@ dry_youtube:
   postmap_name: null
   reduce: "./configs/prompts/combine_summaries.txt"
 
-dry_video:
-  premap: null
-  premap_name: null 
-  map: "./configs/prompts/video_summary.txt"
-  postmap: null
-  postmap_name: null
-  reduce: "./configs/prompts/combine_summaries.txt"
-
-summary_no_citates:
+facts:
   premap_name: null
   premap: null
   map: "./configs/prompts/video_summary.txt"
-  postmap_name: 'chapter_title'
+  postmap_name: 'chapter_titles'
   postmap: "./configs/prompts/get_title.txt"
   reduce: "./configs/prompts/get_article_name.txt"
 

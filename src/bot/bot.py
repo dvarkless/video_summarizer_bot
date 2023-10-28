@@ -45,16 +45,12 @@ async def set_default_commands(bot: Bot, language='English'):
 
 
 async def check_tasks():
-    print('Call check_tasks()')
     to_del = []
     for user_id, task in user_tasks.items():
-        print(
-            f"For user {user_id}, the task is {'Done' if task.done() else 'processing'}")
         if task.done():
             await task
             out, message = task.result()
             to_del.append(user_id)
-            print('Await task')
 
             return_afunc = return_funcs[bot_settings['return_type']]
             await return_afunc(out, message)
