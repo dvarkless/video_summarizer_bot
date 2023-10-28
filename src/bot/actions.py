@@ -1,12 +1,12 @@
 import asyncio
 import logging
-from asyncio import AbstractEventLoop, Future, Task
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+from datetime import datetime
 from pathlib import Path
 
 from aiogram.enums import parse_mode
 from aiogram.types import FSInputFile, Message
+from pydub import AudioSegment
 
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
@@ -15,7 +15,7 @@ from src.bot.exceptions import (AudioModelError, ComposerError,
 from src.compose.composers import Composer
 from src.compose.markdown import Markdown
 from src.config import Config
-from src.database import Database, user_tasks
+from src.database import user_tasks
 from src.process.agent import MapReduceSplitter
 from src.process.file_process import Transcribe, TranscribeYoutube
 from src.process.model import ConfigureModel
@@ -25,7 +25,6 @@ from src.setup_handler import get_handler
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
 
-database = Database()
 bot_settings = Config('./configs/bot_settings.yaml')
 executor = ThreadPoolExecutor(max_workers=1)
 replies = BotReply()
@@ -38,10 +37,8 @@ async def worker(message: Message, foo):
         logger.error(msg)
         raise TooManyTasksError(msg)
 
-    print('Creating task')
     loop = asyncio.get_running_loop()
     task = asyncio.ensure_future(loop.run_in_executor(executor, foo))
-    print('Saving task')
     user_tasks[message.from_user.id] = task
 
 
@@ -73,6 +70,81 @@ async def answer_doc(path, message: Message):
         parse_mode='MarkdownV2',
     )
     Path(path).unlink(missing_ok=True)
+
+
+def get_temp_name(prefix=''):
+    curr_d = datetime.now()
+    curr_t = curr_d.strftime("temp-%B-%d-%H-%M-%S")
+    if prefix:
+        prefix = prefix + '-'
+    return prefix + curr_t
+
+
+def run_youtube(
+        url,
+        text_model,
+        audio_model,
+        document_format,
+        text_format,
+        document_language,
+):
+
+    temp_name = get_temp_name('audio')
+    text, title = get_text_youtube(url, audio_model, temp_name)
+
+    txt_path = f'./temp/{get_temp_name("txt")}.txt'
+    with open(txt_path, 'w') as f:
+        f.writelines(text)
+
+    temp_name = get_temp_name('file')
+    summary = run_summary(
+        title,
+        txt_path,
+        text_model,
+        document_format,
+        text_format,
+        answer_language=document_language,
+        temp_name=temp_name,
+    )
+
+    return summary
+
+
+def run_video(
+        video_path,
+        text_model,
+        audio_model,
+        document_format,
+        text_format,
+        document_language,
+):
+    try:
+        audio_path = f"./temp/{get_temp_name('audio')}.mp3"
+        AudioSegment.from_file(str(video_path), video_path.suffix[1:]).export(
+            audio_path, format='mp3')
+        video_path.unlink(missing_ok=True)
+    except Exception as ex:
+        raise AudioModelError from ex
+
+    title = Path(video_path).name
+    text = get_text_local(audio_path, audio_model)
+    txt_path = f'./temp/{get_temp_name("txt")}.txt'
+
+    with open(txt_path, 'w') as f:
+        f.writelines(text)
+
+    temp_name = get_temp_name('file')
+    summary = run_summary(
+        title,
+        txt_path,
+        text_model,
+        document_format,
+        text_format,
+        answer_language=document_language,
+        temp_name=temp_name,
+    )
+
+    return summary
 
 
 def run_summary(
@@ -232,11 +304,10 @@ def get_text_youtube(link, model_name, temp_name='temp'):
     return text, title
 
 
-def get_text_local(file_path, model_name, temp_name='temp'):
+def get_text_local(file_path, model_name):
     logger.info('Call: get_text_local')
 
     models_config = Config('./configs/models_audio.yaml')
-    temp_path = f"./temp/{temp_name}.mp4"
     try:
         model_provider = ConfigureModel(model_name, models_config)
     except KeyError as ex:
@@ -249,7 +320,7 @@ def get_text_local(file_path, model_name, temp_name='temp'):
         raise LLMError(msg) from ex
 
     try:
-        transcriber = Transcribe(model_provider, temp_path)
+        transcriber = Transcribe(model_provider)
         text = transcriber.transcribe_file(file_path)
     except Exception as ex:
         msg = 'Error while transcribing video from local file'
@@ -257,5 +328,4 @@ def get_text_local(file_path, model_name, temp_name='temp'):
         raise AudioModelError(msg) from ex
 
     Path(file_path).unlink(missing_ok=True)
-    Path(temp_path).unlink(missing_ok=True)
     return text

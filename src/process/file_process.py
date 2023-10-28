@@ -10,9 +10,8 @@ logger.addHandler(get_handler())
 
 
 class Transcribe:
-    def __init__(self, model_provider, temp_dir) -> None:
+    def __init__(self, model_provider) -> None:
         self._model_provider = model_provider
-        self.temp_dir = Path(temp_dir)
         self.elapsed_time = 0.0
 
     def transcribe_file(
@@ -77,9 +76,10 @@ class Transcribe:
 
 
 class TranscribeYoutube(Transcribe):
-    def __init__(self, model_provider, temp_dir) -> None:
+    def __init__(self, model_provider, temp_path) -> None:
         self.yt = None
-        super().__init__(model_provider, temp_dir)
+        self.temp_path = Path(temp_path)
+        super().__init__(model_provider)
 
     def load_link(self, youtubelink: str):
         self.yt = YouTube(youtubelink)
@@ -108,6 +108,6 @@ class TranscribeYoutube(Transcribe):
         logger.info('Call: TranscribeYoutube.get_audio')
         if self.yt is not None:
             return self.yt.streams.get_audio_only().download(
-                filename=str(self.temp_dir))
+                filename=str(self.temp_path))
         else:
             raise AttributeError("Call self.load_link first")

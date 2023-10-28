@@ -8,10 +8,8 @@ from traceback import format_exception
 from aiogram import Bot, F, Router
 from aiogram.filters.exception import ExceptionTypeFilter
 from aiogram.types import ErrorEvent, Message
-from pydub import AudioSegment
 
-from src.bot.actions import (get_text_local, get_text_youtube, run_summary,
-                             worker)
+from src.bot.actions import run_summary, run_video, run_youtube, worker
 from src.bot.bot_locale import BotReply
 from src.bot.exceptions import (AudioModelError, ComposerError,
                                 ConfigAccessError, LinkError, LLMError,
@@ -29,14 +27,6 @@ bot_settings = Config('./configs/bot_settings.yaml')
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
-
-
-def get_temp_name(prefix=''):
-    curr_d = datetime.now()
-    curr_t = curr_d.strftime("temp-%B-%d-%H-%M-%S")
-    if prefix:
-        prefix = prefix + '-'
-    return prefix + curr_t
 
 
 @router.message(F.video)
@@ -63,41 +53,24 @@ async def video_handler(message: Message, bot: Bot) -> None:
         replies.answers(message.from_user.id, 'general')[
             'got_video']
     )
-    try:
-        audio_path = f"./temp/{get_temp_name('audio')}.mp3"
-        AudioSegment.from_file(str(file_path), file_path.suffix[1:]).export(
-            audio_path, format='mp3')
-        file_path.unlink(missing_ok=True)
-    except Exception as ex:
-        raise AudioModelError from ex
-
     # Preparing data
     with database as db:
         settings = db.get_settings(user_id)
 
     audio_model = bot_settings['audio_model']
-    temp_name = get_temp_name('audio')
-    text = get_text_local(audio_path, audio_model, temp_name)
-
-    txt_path = f'./temp/{get_temp_name("txt")}.txt'
-    with open(txt_path, 'w') as f:
-        f.writelines(text)
-
     text_model = bot_settings['text_model']
     document_format = settings['document_format']
     document_language = settings['document_language']
     text_format = settings['text_format'] + '_video'
 
-    temp_name = get_temp_name('file')
     summary_func = partial(
-        run_summary,
-        file_name,
-        txt_path,
+        run_video,
+        file_path,
         text_model,
+        audio_model,
         document_format,
         text_format,
-        answer_language=document_language,
-        temp_name=temp_name,
+        document_language,
     )
     wrapper = partial(message_wrapper, summary_func, message)
     await worker(message, wrapper)
@@ -128,29 +101,19 @@ async def link_handler(message: Message) -> None:
         settings = db.get_settings(user_id)
 
     audio_model = bot_settings['audio_model']
-    temp_name = get_temp_name('audio')
-    text, title = get_text_youtube(link, audio_model, temp_name)
-
-    txt_path = f'./temp/{get_temp_name("txt")}.txt'
-    with open(txt_path, 'w') as f:
-        f.writelines(text)
-
     text_model = bot_settings['text_model']
     document_format = settings['document_format']
     document_language = settings['document_language']
     text_format = settings['text_format'] + '_youtube'
 
-    temp_name = get_temp_name('file')
     summary_func = partial(
-        run_summary,
-        title,
-        txt_path,
+        run_youtube,
+        link,
         text_model,
+        audio_model,
         document_format,
         text_format,
-        answer_language=document_language,
-        temp_name=temp_name,
-        yt_link=link,
+        document_language,
     )
     wrapper = partial(message_wrapper, summary_func, message)
     await worker(message, wrapper)
