@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from langchain.chains import (LLMChain, MapReduceDocumentsChain,
                               ReduceDocumentsChain, StuffDocumentsChain)
+from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sklearn.cluster import KMeans
@@ -15,7 +16,7 @@ logger.addHandler(get_handler())
 
 
 class MapReduceSplitter:
-    compression_power = 0.7
+    compression_power = 1.3
     separators = [
         '\n\n',
         '\n',
@@ -28,15 +29,15 @@ class MapReduceSplitter:
     def __init__(self,
                  llm_provider,
                  embeddings_provider,
-                 map_prompt,
-                 reduce_prompt,
-                 premap_prompts=None,
-                 postmap_prompts=None,
-                 postreduce_prompts=None,
-                 window_len=2000,
-                 window_overlap=300,
-                 n_docs_theshold=10,
-                 max_tokens=4000,
+                 map_prompt: PromptTemplate,
+                 reduce_prompt: PromptTemplate,
+                 premap_prompts: dict | list[dict] | None = None,
+                 postmap_prompts: dict | list[dict] | None = None,
+                 postreduce_prompts: dict | list[dict] | None = None,
+                 window_len: int = 5000,
+                 window_overlap: int = 500,
+                 n_docs_theshold: int = 10,
+                 max_tokens: int = 4000,
                  ) -> None:
         self._llm_provider = llm_provider
         self._embeddings_provider = embeddings_provider
@@ -55,33 +56,7 @@ class MapReduceSplitter:
                                            chunk_overlap=window_overlap
                                            )
 
-    @property
-    def llm(self):
-        if not hasattr(self, '_llm'):
-            raise AttributeError("self.llm does not exist")
-        return self._llm
-
-    @property
-    def embeddings(self):
-        if not hasattr(self, '_embeddings'):
-            raise AttributeError("self.embeddings does not exist")
-        return self._embeddings
-
-    @llm.setter
-    def llm(self, val):
-        if hasattr(self, '_embeddings'):
-            raise AttributeError(
-                "self.llm accessed without deleting self.embeddings")
-        self._llm = val
-
-    @embeddings.setter
-    def embeddings(self, val):
-        if hasattr(self, '_llm'):
-            raise AttributeError(
-                "self.embeddings accessed without deleting self.llm")
-        self._embeddings = val
-
-    def load_docs(self, doc_path):
+    def load_docs(self, doc_path) -> list[str]:
         logger.info('Call: MapReduceSplitter.load_docs')
         doc_path = Path(doc_path)
         with open(doc_path, 'r') as f:
@@ -89,7 +64,7 @@ class MapReduceSplitter:
         documents = self.text_splitter.split_text(text)
         return documents
 
-    def compress_docs(self, documents):
+    def compress_docs(self, documents: list[str]) -> list[str]:
         logger.info('Call: MapReduceSplitter.compress_docs')
 
         doc_len = len(documents)
@@ -97,14 +72,14 @@ class MapReduceSplitter:
             return documents
 
         logger.info('Compressing docs')
-        with self._embeddings_provider as self.embeddings:
+        with self._embeddings_provider as embeddings:
             vectors = self.embeddings.embed_documents(
-                [x.page_content for x in documents])
+                documents)
 
             # As the text grows larger, the compressed text becomes smaller
-            mul_coeff = (doc_len /
-                         self.n_docs_theshold) ** self.compression_power
-            num_clusters = int(doc_len*mul_coeff)
+            mul_coeff = (
+                doc_len / self.n_docs_theshold) ** self.compression_power
+            num_clusters = int(doc_len / mul_coeff)
             selected_ids = self._closest_docs(vectors, num_clusters)
             selected_docs = [documents[doc_id] for doc_id in selected_ids]
         return selected_docs
@@ -113,7 +88,7 @@ class MapReduceSplitter:
         """Chooses the most precise clusters of info"""
         logger.info('Call: MapReduceSplitter._closest_docs')
 
-        kmeans = KMeans(n_clusters=num_clusters).fit(vectors)
+        kmeans = KMeans(n_clusters=num_clusters, n_init='auto').fit(vectors)
         closest_indices = []
 
         # Finds `num_clusters` unique documents
@@ -194,7 +169,7 @@ class MapReduceSplitter:
 
         documents = self.load_docs(doc_path)
         documents = self.compress_docs(documents)
-        with self._llm_provider as self.llm:
+        with self._llm_provider as llm:
             if self.premap_prompts:
                 out_dict |= self.iterate_chains(documents, self.premap_prompts)
 
