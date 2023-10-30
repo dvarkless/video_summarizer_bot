@@ -1,8 +1,6 @@
 chatgpt:
   name: "gpt3.5-turbo"
-  template: None
   provider: OpenAI
-  is_local: False
   window_len: 5000
   window_overlap: 400
   instruction_template: ""
@@ -11,86 +9,29 @@ chatgpt:
   available_context: 4096
   model_params:
     model_name: "gpt3.5-turbo"
-    temperature: 0.2
+    temperature: 0.5
     max_tokens: 512
 
 synthia:
   name: "Synthia_13B_instruct"
-  hf_repo: ""
   window_len: 5000
   window_overlap: 400
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"
   provider: LlamaCpp
-  is_local: True
   available_context: 4096
   model_params:
-    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/Synthia_13B_instruct/llama.cpp/synthia-13b-v1.2.Q4_K_M.gguf"
-    temperature: 0.2
+    model_path: "path/to/model.gguf"
+    temperature: 0.5
     top_p: 0.95
     repeat_penalty: 1.15
     top_k: 40
     f16_kv: True
 
-    max_tokens: 400
+    max_tokens: 250
 
-    n_gpu_layers: 42
+    n_gpu_layers: 41
     n_batch: 256
-    n_ctx: 3500
+    n_ctx: 4096
 
-    verbose: True
-
-airoboros:
-  name: "Synthia_13B_instruct"
-  hf_repo: ""
-  window_len: 5000
-  window_overlap: 400
-  instruction_template: "### Instruction:"
-  system_template: "### System:"
-  response_template: "### Response:"
-  provider: LlamaCpp
-  is_local: True
-  available_context: 4096
-  model_params:
-    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/airoboros_13B_instruct/llama.cpp/airoboros-l2-13b-2.2.1.Q4_K_M.gguf"
-    temperature: 0.2
-    top_p: 0.95
-    repeat_penalty: 1.15
-    top_k: 40
-    f16_kv: True
-
-    max_tokens: 400
-
-    n_gpu_layers: 43
-    n_batch: 256
-    n_ctx: 3500
-
-    verbose: True
-
-vicuna:
-  name: "vicuna_13b_CoT"
-  hf_repo: ""
-  window_len: 5000
-  window_overlap: 400
-  instruction_template: "USER:"
-  system_template: "SYSTEM:"
-  response_template: "ASSISTANT:"
-  provider: LlamaCpp
-  is_local: True
-  available_context: 4096
-  model_params:
-    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/vicuna_13b_CoT/llama.cpp/Vicuna-13B-CoT.Q4_K_M.gguf"
-    temperature: 0.2
-    top_p: 0.95
-    repeat_penalty: 1.15
-    top_k: 40
-    f16_kv: True
-
-    max_tokens: 400
-
-    n_gpu_layers: 43
-    n_batch: 256
-    n_ctx: 3500
-
-    verbose: True

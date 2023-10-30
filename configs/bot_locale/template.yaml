@@ -8,6 +8,7 @@ start:
 cancel:
   message: canceled
   description: Cancel current task
+
 help:
   message: |
     help message
@@ -16,21 +17,21 @@ help:
 
 change_language: 
   message: |
-    "change bots language to:"
+    change bots language to
   description: Change bot's interface language
   button1: "English"
   button2: "русский"
 
 document_format:
   message: |
-    "Change document output format to:"
+    Change document output format to
   description: Change output document format
   button1: "markdown"
   # button2: "pdf"
 
 document_language:
   message: |
-    "Receive answer in"
+    Receive answer in
   description: Change document's language
   button1: "auto"
   button2: "English"
@@ -40,28 +41,32 @@ text_format:
   message: |
     "Text structure is"
   description: Defines text structure
-  button1: "full"
-  value1: "full"
-  button2: "dry"
-  value2: "dry"
+  button1: full
+  value1: full
+  button2: dry
+  value2: dry
+  button3: regular
+  value3: facts
 
 general:
   success: Success!
-  got_link: Processing youtube video...
-  got_video: Processing video...
-  transcribing: Transcribing video, please wait...
-  processing: Processing text, please wait...
+  got_link: Processing youtube video
+  got_video: Processing video
+  transcribing: Transcribing video, please wait
+  processing: Processing text, please wait
   caption: Here is your document
   document_caption: Here is your summary!
   startup: Bot started
   shutdown: Bot shutdown
 
 errors:
-  critical: "Critical Error"
-  bad_link: "Bad link"
-  config_access: "Error: could not access config file with the provided keyword"
-  composer: "Error in document generation"
-  llm: "Error in text generation module"
-  audio_model: "Error in transcription process"
-  file_not_found: "Could not find file in the provided path"
-  unknown_setting: "You chose a wrong setting, use keyboard next time or check configs"
+  critical: Critical Error
+  nothing_to_cancel: Nothing to cancel
+  bad_link: Bad link
+  config_access: Config file access error
+  composer: Error in document generation
+  llm: Error in text generation module
+  audio_model: Error in transcription process
+  too_many_tasks: Too many tasks error
+  file_not_found: Could not find file in the provided path
+  unknown_setting: You chose a wrong setting, use keyboard next time or check configs
