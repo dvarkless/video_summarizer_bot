@@ -9,12 +9,17 @@ from faster_whisper import WhisperModel
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings
 from langchain.embeddings.spacy_embeddings import SpacyEmbeddings
 from langchain.llms import LlamaCpp, OpenAI
+from llama_cpp import llama_free_model
 from pydub import AudioSegment
 
 from src.setup_handler import get_handler
 
 logger = logging.getLogger(__name__)
 logger.addHandler(get_handler())
+
+
+class ModelError(Exception):
+    pass
 
 
 class WhisperInference:
@@ -59,6 +64,7 @@ class WhisperInference:
 
     def __del__(self):
         del self.model
+        time.sleep(3)
 
 
 class WhisperCloud:
@@ -148,6 +154,13 @@ class ConfigureModel:
         return self.get_model()
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            raise exc_value.with_traceback(traceback)
+
+        # Fix bug with not clearing vram
+        provider_name = self._config[self._model_name]['provider']
+        if provider_name in ("LlamaCpp", "LlamaCppEmbeddings"):
+            llama_free_model(self.model.client.model)
         del self.model
 
     def _configure_model(self):
