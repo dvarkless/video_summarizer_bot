@@ -56,6 +56,14 @@ class MapReduceSplitter:
                                            chunk_overlap=window_overlap
                                            )
 
+    @property
+    def llm(self):
+        return self._llm
+
+    @llm.setter
+    def llm(self, val):
+        self._llm = val
+
     def load_docs(self, doc_path) -> list[str]:
         logger.info('Call: MapReduceSplitter.load_docs')
         doc_path = Path(doc_path)
@@ -73,15 +81,17 @@ class MapReduceSplitter:
 
         logger.info('Compressing docs')
         with self._embeddings_provider as embeddings:
-            vectors = self.embeddings.embed_documents(
-                documents)
+            vectors = embeddings.embed_documents(
+                documents
+            )
 
-            # As the text grows larger, the compressed text becomes smaller
-            mul_coeff = (
-                doc_len / self.n_docs_theshold) ** self.compression_power
-            num_clusters = int(doc_len / mul_coeff)
-            selected_ids = self._closest_docs(vectors, num_clusters)
-            selected_docs = [documents[doc_id] for doc_id in selected_ids]
+        # As the text grows larger, the compressed text becomes smaller
+        mul_coeff = (
+            doc_len / self.n_docs_theshold
+        ) ** self.compression_power
+        num_clusters = int(doc_len / mul_coeff)
+        selected_ids = self._closest_docs(vectors, num_clusters)
+        selected_docs = [documents[doc_id] for doc_id in selected_ids]
         return selected_docs
 
     def _closest_docs(self, vectors, num_clusters):
@@ -100,15 +110,15 @@ class MapReduceSplitter:
             closest_indices.append(closest_index)
         return sorted(closest_indices)
 
-    def get_main_chain(self):
+    def get_main_chain(self, llm):
         logger.info('Call: MapReduceSplitter.get_main_chain')
 
         map_chain = LLMChain(
-            llm=self.llm,
+            llm=llm,
             prompt=self.map_prompt,
         )
         reduce_chain = LLMChain(
-            llm=self.llm,
+            llm=llm,
             prompt=self.reduce_prompt,
         )
         combine_documents_chain = StuffDocumentsChain(
@@ -129,14 +139,14 @@ class MapReduceSplitter:
         )
         return map_reduce_chain
 
-    def iterate_chains(self, docs, prompts):
+    def iterate_chains(self, docs, prompts, llm):
         logger.info('Call: MapReduceSplitter.iterate_chains')
 
         out = {}
         for name, prompt in prompts.items():
             out[name] = []
             premap_chain = LLMChain(
-                llm=self.llm,
+                llm=llm,
                 prompt=prompt
             )
             for doc in docs:
@@ -158,6 +168,8 @@ class MapReduceSplitter:
         logger.info('Call: MapReduceSplitter.fix_chapters')
 
         fixed_chapters = []
+        if chapters is str:
+            chapters = [chapters]
         for chapter in chapters:
             chapter = chapter.split(':\n')[-1]
             fixed_chapters.append(chapter)
@@ -171,9 +183,10 @@ class MapReduceSplitter:
         documents = self.compress_docs(documents)
         with self._llm_provider as llm:
             if self.premap_prompts:
-                out_dict |= self.iterate_chains(documents, self.premap_prompts)
+                out_dict |= self.iterate_chains(
+                    documents, self.premap_prompts, llm)
 
-            map_reduce_chain = self.get_main_chain()
+            map_reduce_chain = self.get_main_chain(llm)
             mr_input = {'docs': [Document(page_content=doc)
                                  for doc in documents]}
             map_reduce_dict = map_reduce_chain(mr_input)
@@ -182,11 +195,15 @@ class MapReduceSplitter:
 
             if self.postmap_prompts:
                 out_dict |= self.iterate_chains(
-                    chapter_outs, self.postmap_prompts)
+                    chapter_outs, self.postmap_prompts,
+                    llm
+                )
 
             if self.postreduce_prompts:
                 out_dict |= self.iterate_chains(
-                    brief_description, self.postreduce_prompts)
+                    brief_description, self.postreduce_prompts,
+                    llm
+                )
 
             out_dict['chapters'] = self.fix_chapters(chapter_outs)
             out_dict['description'] = self.fix_chapters(brief_description)
