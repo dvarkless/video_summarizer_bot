@@ -161,6 +161,7 @@ class ConfigureModel:
         provider_name = self._config[self._model_name]['provider']
         if provider_name in ("LlamaCpp", "LlamaCppEmbeddings"):
             llama_free_model(self.model.client.model)
+            del self.model.client.model
         del self.model
 
     def _configure_model(self):
