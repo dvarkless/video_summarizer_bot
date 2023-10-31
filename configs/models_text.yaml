@@ -1,8 +1,8 @@
 chatgpt:
   name: "gpt3.5-turbo"
   provider: OpenAI
-  window_len: 5000
-  window_overlap: 400
+  window_len: 7000
+  window_overlap: 500
   instruction_template: ""
   system_template: ""
   response_template: ""
@@ -10,26 +10,26 @@ chatgpt:
   model_params:
     model_name: "gpt3.5-turbo"
     temperature: 0.5
-    max_tokens: 512
+    max_tokens: 400
 
 synthia:
   name: "Synthia_13B_instruct"
-  window_len: 5000
-  window_overlap: 400
+  window_len: 7000
+  window_overlap: 500
   instruction_template: "USER:"
   system_template: "SYSTEM:"
   response_template: "ASSISTANT:"
   provider: LlamaCpp
   available_context: 4096
   model_params:
-    model_path: "path/to/model.gguf"
+    model_path: "/run/media/dvarkless/LinuxData/Large_Language_Models/models/Synthia_13B_instruct/llama.cpp/synthia-13b-v1.2.Q4_K_M.gguf"
     temperature: 0.5
     top_p: 0.95
     repeat_penalty: 1.15
     top_k: 40
     f16_kv: True
 
-    max_tokens: 250
+    max_tokens: 400
 
     n_gpu_layers: 41
     n_batch: 256
