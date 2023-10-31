@@ -18,7 +18,7 @@
   <p align="center">
     Summarize videos with telegram bot using large language models
     <br />
-    <a href="https://github.com/dvarkless/video-summary-bot/docs"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/dvarkless/video-summary-bot/docs/settings.md"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/dvarkless/video-summary-bot/tree/master#demo">View Demo</a>
@@ -167,33 +167,14 @@ pip install openai-whisper
 ### Configuration:
 This bot is designed to be customizable using only the configuration files. You can change this YAML files at `./configs/`.
 
-Before you can start, you should edit `secrets.yml` file:
-```yml
-telegram_token: # PLACE YOUR TG TOKEN HERE
-openai_token: # PLACE YOUR OPENAI TOKEN HERE
-blacklist_path: "./users/blacklist.txt"  # Not implemented yet
-whitelist_path: "./users/whitelist.txt"  # Not implemented yet
-mongodb_url: "mongodb://127.0.0.1:27017" # Link to your mongodb server
-mongodb_name: "summary_bot"
-settings_collection: "settings"
-tokens_collection: "tokens"
-telegram_collection: "telegram"
-admin_id: # PASTE YOUR TELEGRAM ID HERE
-```  
+Before you can start, you should [edit][settings_docs] `secrets.yml` file
+
 
 1. Configuring bot:  
-Change field `text-model` to switch between different models defined in `models_text.yml` or `models_audio.yml`
-
-```yml
-text_model: 'chatgpt' # text model from models_text.yml
-audio_model: 'whisper_local' # audio model from models_audio.yml
-change_language: 'English' # Language from ./bot_locale/
-document_format: 'markdown' # Default option
-text_format: 'speech' # Default option
-document_language: 'auto' # Default option
-```
-Please refer to [text model docs](text_model_docs) or [audio model docs](audio_model_docs) to configure models.  
-If you want to write bot's responses in different language, refer to the [documentation](language_docs)
+Please refer to [model docs][model_docs] to configure models.  
+If you want to write bot's responses in different language, refer to the [documentation][language_docs].  
+[Bot settings][settings_docs].  
+[How to tweak LLM behaviour][prompts_docs].  
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -233,10 +214,6 @@ List of bot commands:
 - Add pdf document composition
 - Edit prompts to get better results
 - Question answering
-- Languages
-    - Russian readme
-    - Russian docs
-	- Russian bot replicas
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -255,7 +232,6 @@ This project is possible thanks to this awesome open-source libraries:
 - [Aiogram][aiogram-repo]
 - [Whisper][whisper-repo] and [Faster-whisper][faster-whisper-repo]
 - [llama.cpp][llama-cpp-repo] and its [python port][llama-cpp-python-repo]
-- [Audio-extract][audio-extract-repo]
 - And many others
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -286,9 +262,9 @@ This project is possible thanks to this awesome open-source libraries:
 [mongodb-community]: https://www.mongodb.com/try/download/community
 [langchain-repo]: https://github.com/langchain-ai/langchain
 [aiogram-repo]: https://github.com/aiogram/aiogram
-[audio-extract-repo]: https://github.com/riad-azz/audio-extract
 
 [readme-russian]: README-rus.md
-[text_model_docs]: docs/configure_text_models.md
-[audio_model_docs]: docs/configure_audio_models.md
-[language_docs]: docs/language.md
+[model_docs]: docs/models.md
+[settings_docs]: docs/settings.md
+[prompts_docs]: docs/prompts.md
+[language_docs]: docs/bot_locale.md
