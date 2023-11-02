@@ -2,11 +2,11 @@
 
 trap 'echo -e "\033[31mScript failed with an unexpected error!\033[0m" >&2; exit 1' ERR
 
-if [ $UID -ne 0 ]
-then
-    echo -e "\e[1;31m Please run as root...\033[0m"
-    exit 1
-fi
+# if [ $UID -ne 0 ]
+# then
+#     echo -e "\e[1;31m Please run as root...\033[0m"
+#     exit 1
+# fi
 
 
 function header() {
