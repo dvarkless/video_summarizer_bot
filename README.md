@@ -93,7 +93,7 @@ pyenv local 3.10.11
 [**Pyenv installation**](https://github.com/pyenv/pyenv#installation)
 
 #### Windows:
-[How to run multiple Python versions on Windows]()
+[How to run multiple Python versions on Windows][python-versions-windows]
 
 </details>
 
@@ -263,7 +263,7 @@ This project is possible thanks to this awesome open-source libraries:
 [langchain-repo]: https://github.com/langchain-ai/langchain
 [aiogram-repo]: https://github.com/aiogram/aiogram
 
-[readme-russian]: README-rus.md
+[readme-russian]: README-RUS.md
 [model_docs]: docs/models.md
 [settings_docs]: docs/settings.md
 [prompts_docs]: docs/prompts.md
