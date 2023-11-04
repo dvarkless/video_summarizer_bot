@@ -21,9 +21,9 @@ text_model: 'synthia'  # Name of text model from ./configs/text_models.yaml
 audio_model: 'whisper_local'  # Name of audio model from ./configs/text_models.yaml
 
 max_tasks: 5  # Determines how many tasks you can queue
-			  # The next task will result in error
+              # The next task will result in error
 return_type: doc  # How to show results, useful for debugging
-				  # 'doc', 'print', 'answer'
+              # 'doc', 'print', 'answer'
 
 ```
 

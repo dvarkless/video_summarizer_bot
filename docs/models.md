@@ -10,18 +10,18 @@ The general model config:
 
 ```yaml
 model_name:
-	name: name  # Model name, visual only
-	provider: ProviderClass  # Class used to initiate the model
- 	window_len: int  # Number or characters to feed into the model
-	window_overlap: int # Number of overlapping characters 
-						# Usually 5-10% from window_len
- 	instruction_template: str  # Use the default for your model 
-	system_template: str  # Use the default for your model
-	response_template: str  # Use the default for your model
-	available_context: int  # Maximum contex window in tokens
-	model_params:  # Additional params to pass into the ProviderClass
-		param1: val
-		# ...
+  name: name  # Model name, visual only
+  provider: ProviderClass  # Class used to initiate the model
+  window_len: int  # Number or characters to feed into the model
+  window_overlap: int # Number of overlapping characters 
+                    # Usually 5-10% from window_len
+  instruction_template: str  # Use the default for your model 
+  system_template: str  # Use the default for your model
+  response_template: str  # Use the default for your model
+  available_context: int  # Maximum contex window in tokens
+  model_params:  # Additional params to pass into the ProviderClass
+  param1: val
+  # ...
 ```
 
 > Instruction, system, response template are usually provided in model readme. They are not necessary for OpenAI models, so leave them empty while using one.
@@ -45,9 +45,9 @@ chatgpt:
   model_params:
     model_name: "gpt3.5-turbo"
     temperature: 0.2  # How original the generated text should be
-    					# 0.0 - stay strictly on topic
-    					# 1.0 - default
-    max_tokens: 512  # Maximum ammount of tokens to generate per 1 call
+            # 0.0 - stay strictly on topic
+            # 1.0 - default
+    max_tokens: 512  # Maximum amount of tokens to generate per 1 call
 
 ```
 
@@ -68,7 +68,7 @@ synthia:
   model_params:
     model_path: "path/to/your/model/model.gguf"
     
-    # Genaration parameters
+    # Generation parameters
     temperature: 0.2
     top_p: 0.95
     repeat_penalty: 1.15
@@ -77,13 +77,13 @@ synthia:
 
     max_tokens: 400
 
-	# Calculate parameters for your GPU
-	# This config works for 12G Nvidia card
+# Calculate parameters for your GPU
+# This config works for 12G Nvidia card
     n_gpu_layers: 42
     n_batch: 256
     n_ctx: 3500
 
-	# Misc
+# Misc
     verbose: True
 
 ```
