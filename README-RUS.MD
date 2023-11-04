@@ -34,7 +34,6 @@
 <summary>Содержание</summary>
 
 - [О проекте](#about-project)
-- [Демо](#demo)
 - [Запуск](#getting-started)
 - [Требования](#prerequisites)
 - [Установка](#installation)
@@ -51,8 +50,6 @@
 <!-- ABOUT THE PROJECT -->
 <h2 id="about-project">О проекте </h2>
 
-[![Product Name Screen Shot][product-screenshot]][self-repo]
-
 Это представляет собой суммаризатор видео на базе больших языковых моделей (LLM), который использует интерфейс telegram-бота для общения с пользователем и нейронную сеть whisper для расшифровки текста. Для бота используется фреймворк aiogram, langchain для взаимодействия с языковыми моделями, OpenAI для облачной генерации текста и llama.cpp для локальной генерации.  
 
 
@@ -65,12 +62,6 @@
 
 <p align="right">(<a href="#readme-top">наверх</a>)</p>
 
-
-<h3 id="demo">Демо </h3>
-
-![demo1][product-demo-video]
-
-<p align="right">(<a href="#readme-top">наверх</a>)</p>
 
 <!-- GETTING STARTED -->
 <h2 id="getting-started">Запуск </h2>
@@ -248,13 +239,10 @@ python src/bot/bot.py
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [gmail-shield]: https://img.shields.io/badge/-Gmail-black.svg?style=for-the-badge&logo=gmail&colorB=555
 
-[product-screenshot]: assets/screenshot.png
-[product-demo-video]: assets/demo.mp4
-
 [issues-url]: https://github.com/dvarkless/video-summary-bot/issues
 [license-url]: https://github.com/dvarkless/video-summary-bot/blob/master/LICENSE.txt
 [gmail-url]: mailto:dvarkless@gmail.com
-[linkedin-url]: https://linkedin.com/in/amir-suleymanov
+[linkedin-url]: https://linkedin.com/in/dvarkless
 
 [python-versions-windows]: https://stackoverflow.com/questions/4583367/how-to-run-multiple-python-versions-on-windows
 
