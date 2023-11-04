@@ -34,7 +34,6 @@
 <summary>Table of Contents</summary>
 
 - [About The Project](#about-the-project)
-- [Demo](#demo)
 - [Getting Started](#getting-started)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -45,12 +44,10 @@
 
 </details>
 
-[**Readme на русском**][readme-russian] (в процессе перевода)
+[**Readme на русском**][readme-russian]
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]][self-repo]
 
 This is a LLM-powered video summarizer which uses telegram bot frontend to communicate with user and whisper neural network to transcribe text. It uses Aiogram as bot framework, Langchain to communicate with language models, OpenAI to inference text in cloud and Llama.cpp for local inference.  
 
@@ -64,12 +61,6 @@ This is a LLM-powered video summarizer which uses telegram bot frontend to commu
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-### Demo
-
-![demo1][product-demo-video]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -244,13 +235,10 @@ This project is possible thanks to this awesome open-source libraries:
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [gmail-shield]: https://img.shields.io/badge/-Gmail-black.svg?style=for-the-badge&logo=gmail&colorB=555
 
-[product-screenshot]: assets/screenshot.png
-[product-demo-video]: assets/demo.mp4
-
 [issues-url]: https://github.com/dvarkless/video-summary-bot/issues
 [license-url]: https://github.com/dvarkless/video-summary-bot/blob/master/LICENSE.txt
 [gmail-url]: mailto:dvarkless@gmail.com
-[linkedin-url]: https://linkedin.com/in/amir-suleymanov
+[linkedin-url]: https://linkedin.com/in/dvarkless
 
 [python-versions-windows]: https://stackoverflow.com/questions/4583367/how-to-run-multiple-python-versions-on-windows
 
