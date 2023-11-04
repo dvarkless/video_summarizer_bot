@@ -43,15 +43,15 @@ The general structure is:
 
 ```yaml
 command:
-	message: command message
-	description: command description
-	button1: param1
-	value1: true_value1
- 	button2: param2
-	value2: true_value2
- 	...
- 	buttonN: paramN
-	valueN: true_valueN
+  message: command message
+  description: command description
+  button1: param1
+  value1: true_value1
+  button2: param2
+  value2: true_value2
+  ...
+  buttonN: paramN
+  valueN: true_valueN
 ```  
 `message` - Message which bot writes then configuring this setting.    
 `description` - Command description in command list.  
