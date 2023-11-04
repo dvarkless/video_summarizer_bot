@@ -9,7 +9,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/dvarkless/video-summary-bot">
+  <a href="https://github.com/dvarkless/video_summarizer_bot">
     <img src="assets/logo.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -18,14 +18,14 @@
   <p align="center">
     Делай выжимку из видео используя большие языковые модели
     <br />
-    <a href="https://github.com/dvarkless/video-summary-bot/docs/settings.md"><strong>Документация »</strong></a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/docs/settings.md"><strong>Документация »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/dvarkless/video-summary-bot/tree/master#demo">Демо</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/tree/master#demo">Демо</a>
     ·
-    <a href="https://github.com/dvarkless/video-summary-bot/issues">Доложить о баге</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/issues">Доложить о баге</a>
     ·
-    <a href="https://github.com/dvarkless/video-summary-bot/issues">Запрость фичу</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/issues">Запрость фичу</a>
   </p>
 </div>
 
@@ -78,7 +78,7 @@
 Установка нужной версии используя `pyenv` на Linux:  
 
 ```sh
-cd video-summary-bot
+cd video_summarizer_bot
 pyenv local 3.10.11
 ```  
 
@@ -100,8 +100,8 @@ pyenv local 3.10.11
 
 1. Клонирование репо, переход в него:   
 ```sh
-git clone https://github.com/dvarkless/video-summary-bot.git
-cd video-summary-bot
+git clone https://github.com/dvarkless/video_summarizer_bot.git
+cd video_summarizer_bot
 ```   
 2. Запуск установщика:   
 ```sh
@@ -113,8 +113,8 @@ chmod +x ./scripts/installer_linux.sh
 #### Ручная установка:  
 1. Клонирование репо, переход в него:  
 ```sh
-git clone https://github.com/dvarkless/video-summary-bot.git
-cd video-summary-bot
+git clone https://github.com/dvarkless/video_summarizer_bot.git
+cd video_summarizer_bot
 ```
 2. Активирование виртуальной среды:  
 ```sh
@@ -234,19 +234,19 @@ python src/bot/bot.py
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[issues-shield]: https://img.shields.io/github/issues/dvarkless/video-summary-bot.svg?style=for-the-badge
-[license-shield]: https://img.shields.io/github/license/dvarkless/video-summary-bot.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/dvarkless/video_summarizer_bot.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/dvarkless/video_summarizer_bot.svg?style=for-the-badge
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [gmail-shield]: https://img.shields.io/badge/-Gmail-black.svg?style=for-the-badge&logo=gmail&colorB=555
 
-[issues-url]: https://github.com/dvarkless/video-summary-bot/issues
-[license-url]: https://github.com/dvarkless/video-summary-bot/blob/master/LICENSE.txt
+[issues-url]: https://github.com/dvarkless/video_summarizer_bot/issues
+[license-url]: https://github.com/dvarkless/video_summarizer_bot/blob/master/LICENSE.txt
 [gmail-url]: mailto:dvarkless@gmail.com
 [linkedin-url]: https://linkedin.com/in/dvarkless
 
 [python-versions-windows]: https://stackoverflow.com/questions/4583367/how-to-run-multiple-python-versions-on-windows
 
-[self-repo]: https://github.com/dvarkless/video-summary-bot
+[self-repo]: https://github.com/dvarkless/video_summarizer_bot
 [faster-whisper-repo]: https://github.com/guillaumekln/faster-whisper
 [whisper-repo]: https://github.com/openai/whisper
 [llama-cpp-repo]: https://github.com/ggerganov/llama.cpp

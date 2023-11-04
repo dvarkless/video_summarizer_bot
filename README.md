@@ -9,7 +9,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/dvarkless/video-summary-bot">
+  <a href="https://github.com/dvarkless/video_summarizer_bot">
     <img src="assets/logo.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -18,14 +18,14 @@
   <p align="center">
     Summarize videos with telegram bot using large language models
     <br />
-    <a href="https://github.com/dvarkless/video-summary-bot/docs/settings.md"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/docs/settings.md"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/dvarkless/video-summary-bot/tree/master#demo">View Demo</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/tree/master#demo">View Demo</a>
     ·
-    <a href="https://github.com/dvarkless/video-summary-bot/issues">Report Bug</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/issues">Report Bug</a>
     ·
-    <a href="https://github.com/dvarkless/video-summary-bot/issues">Request Feature</a>
+    <a href="https://github.com/dvarkless/video_summarizer_bot/issues">Request Feature</a>
   </p>
 </div>
 
@@ -77,7 +77,7 @@ To get it installed on your system and running follow these simple steps:
 Installing specific python version using `pyenv` on Linux:  
 
 ```sh
-cd video-summary-bot
+cd video_summarizer_bot
 pyenv local 3.10.11
 ```  
 
@@ -99,8 +99,8 @@ pyenv local 3.10.11
 
 1. Clone and cd to the repo:   
 ```sh
-git clone https://github.com/dvarkless/video-summary-bot.git
-cd video-summary-bot
+git clone https://github.com/dvarkless/video_summarizer_bot.git
+cd video_summarizer_bot
 ```   
 2. Run the installer script:   
 ```sh
@@ -112,8 +112,8 @@ Use manual intallation if you are using Windows system.
 #### Manual installation:  
 1. Clone and cd to the repo:  
 ```sh
-git clone https://github.com/dvarkless/video-summary-bot.git
-cd video-summary-bot
+git clone https://github.com/dvarkless/video_summarizer_bot.git
+cd video_summarizer_bot
 ```
 2. Activate virtual environment:  
 ```sh
@@ -230,19 +230,19 @@ This project is possible thanks to this awesome open-source libraries:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[issues-shield]: https://img.shields.io/github/issues/dvarkless/video-summary-bot.svg?style=for-the-badge
-[license-shield]: https://img.shields.io/github/license/dvarkless/video-summary-bot.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/dvarkless/video_summarizer_bot.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/dvarkless/video_summarizer_bot.svg?style=for-the-badge
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [gmail-shield]: https://img.shields.io/badge/-Gmail-black.svg?style=for-the-badge&logo=gmail&colorB=555
 
-[issues-url]: https://github.com/dvarkless/video-summary-bot/issues
-[license-url]: https://github.com/dvarkless/video-summary-bot/blob/master/LICENSE.txt
+[issues-url]: https://github.com/dvarkless/video_summarizer_bot/issues
+[license-url]: https://github.com/dvarkless/video_summarizer_bot/blob/master/LICENSE.txt
 [gmail-url]: mailto:dvarkless@gmail.com
 [linkedin-url]: https://linkedin.com/in/dvarkless
 
 [python-versions-windows]: https://stackoverflow.com/questions/4583367/how-to-run-multiple-python-versions-on-windows
 
-[self-repo]: https://github.com/dvarkless/video-summary-bot
+[self-repo]: https://github.com/dvarkless/video_summarizer_bot
 [faster-whisper-repo]: https://github.com/guillaumekln/faster-whisper
 [whisper-repo]: https://github.com/openai/whisper
 [llama-cpp-repo]: https://github.com/ggerganov/llama.cpp
